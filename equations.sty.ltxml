@@ -1,0 +1,134 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  equations.sty                                                      | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+
+# Functionally equivalent to
+# https://arxiv.org/macros/equations.sty
+
+RequirePackage('subeqn');
+DefRegister('\@stequation' => Tokens());
+
+DefEnvironment('{eqalignno}',
+  "<ltx:equation xml:id='#id'>"
+    . "#tags"
+    . "<ltx:Math mode='display'>"
+    . "<ltx:XMath>"
+    . "#body"
+    . "</ltx:XMath>"
+    . "</ltx:Math>"
+    . "</ltx:equation>",
+  mode         => 'display_math',
+  beforeDigest => sub {
+    prepareEquationCounter(numbered => 1, preset => 1);
+    beforeEquation();
+    $_[0]->getGullet->unread(T_CS('\@start@alignment'));
+    Let(T_MATH, T_CS('\@dollar@in@mathmode'));
+    return; },
+  afterDigestBody => sub { 
+    afterEquation($_[1]);
+    $_[0]->getGullet->unread(T_CS('\@finish@alignment'));
+    return; },
+  locked => 1);
+DefEnvironment('{eqalignno*}',
+  "<ltx:equation xml:id='#id'>"
+    . "#tags"
+    . "<ltx:Math mode='display'>"
+    . "<ltx:XMath>"
+    . "#body"
+    . "</ltx:XMath>"
+    . "</ltx:Math>"
+    . "</ltx:equation>",
+  mode         => 'display_math',
+  beforeDigest => sub {
+    beforeEquation();
+    $_[0]->getGullet->unread(T_CS('\@start@alignment'));
+    Let(T_MATH, T_CS('\@dollar@in@mathmode'));
+    return; },
+  afterDigestBody => sub { 
+    afterEquation($_[1]);
+    $_[0]->getGullet->unread(T_CS('\@finish@alignment'));
+    return; },
+  locked => 1);
+
+RawTeX(<<'EOL');
+\newif\if@defeqnsw \@defeqnswtrue
+
+% This is John Hobby's (hobby@research.att.com) version to fix up the spacing.
+\def\eqnarray{\stepcounter{equation}\let\@currentlabel=\theequation
+\if@defeqnsw\global\@eqnswtrue\else\global\@eqnswfalse\fi
+\global\@eqnswtrue
+\tabskip\@centering\let\\=\@eqncr
+$$\halign to \displaywidth\bgroup\hfil\global\@eqcnt\z@
+  $\displaystyle\tabskip\z@{##}$&\global\@eqcnt\@ne
+  \hfil$\displaystyle{{}##{}}$\hfil
+  &\global\@eqcnt\tw@ $\displaystyle{##}$\hfil
+  \tabskip\@centering&\llap{##}\tabskip\z@\cr}
+
+\def\yesnumber{\global\@eqnswtrue}
+
+\def\@@eqncr{\let\@tempa\relax\global\advance\@eqcnt by \@ne
+    \ifcase\@eqcnt \def\@tempa{& & & &}\or \def\@tempa{& & &}\or
+     \def\@tempa{& &}\or \def\@tempa{&}\else\fi
+     \@tempa \if@eqnsw\@eqnnum\stepcounter{equation}\fi
+     \if@defeqnsw\global\@eqnswtrue\else\global\@eqnswfalse\fi
+     \global\@eqcnt\z@\cr}
+
+% Several formulas like \eqalign (to go inside \begin{equation}
+% \end{equation} or $$ $$.
+
+\def\@eqnacr{{\ifnum0=`}\fi\@ifstar{\@yeqnacr}{\@yeqnacr}}
+
+\def\@yeqnacr{\@ifnextchar [{\@xeqnacr}{\@xeqnacr[\z@]}}
+
+\def\@xeqnacr[#1]{\ifnum0=`{\fi}\cr \noalign{\vskip\jot\vskip #1\relax}}
+
+\def\eqalign{\null\,\vcenter\bgroup\openup1\jot \m@th \let\\=\@eqnacr
+\ialign\bgroup\strut
+\hfil$\displaystyle{##}$&$\displaystyle{{}##}$\hfil\crcr}
+\def\endeqalign{\crcr\egroup\egroup\,}
+
+% \cases
+
+\def\cases{\left\{\,\vcenter\bgroup\normalbaselines\m@th \let\\=\@eqnacr
+    \ialign\bgroup$##\hfil$&\quad##\hfil\crcr}
+\def\endcases{\crcr\egroup\egroup\right.}
+
+% Two formulas like \eqalignno (doesn't need the $$ $$)
+
+\def\eqaligntwo{\stepcounter{equation}\let\@currentlabel=\theequation
+\if@defeqnsw\global\@eqnswtrue\else\global\@eqnswfalse\fi
+\let\\=\@eqncr
+$$\displ@y \tabskip\@centering \halign to \displaywidth\bgroup
+  \global\@eqcnt\m@ne\hfil
+  $\@lign\displaystyle{##}$\tabskip\z@skip&\global\@eqcnt\z@
+  $\@lign\displaystyle{{}##}$\hfil\qquad&\global\@eqcnt\@ne
+  \hfil$\@lign\displaystyle{##}$&\global\@eqcnt\tw@
+  $\@lign\displaystyle{{}##}$\hfil\tabskip\@centering&
+  \llap{\@lign##}\tabskip\z@skip\crcr}
+
+\def\endeqaligntwo{\@@eqncr\egroup
+      \global\advance\c@equation\m@ne$$\global\@ignoretrue}
+
+\@namedef{eqaligntwo*}{\@defeqnswfalse\eqaligntwo}
+\@namedef{endeqaligntwo*}{\endeqaligntwo}
+
+EOL
+
+#**********************************************************************
+
+1;
