@@ -1,0 +1,38 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  xy.tex                                                             | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+
+Warn('missing_file', 'xy.tex', $STATE->getStomach->getGullet,'xy.tex is not implemented, the features here are a stub.');
+
+
+DefConstructor('\xymatrix {Undigested}','<ltx:ERROR>{xymatrx}</ltx:ERROR>', locked=>1);
+DefMacro('\vcenter{}','#1',locked=>1);
+DefMacro('\xyoption{}','',locked=>1);
+DefMacro('\ar','\relax',locked=>1);
+
+DefMacroI(T_CS('\xydef@'),'{}','\gdef#1');
+DefMacroI(T_CS('\xylet@'),'{}','\global\let#1');
+DefMacroI(T_CS('\xyoption'),'{}','');
+DefMacro('\xyprovide{}{}{}{}{}{}','');
+DefMacro('\newdir{}','');
+# Too dangerous for now.
+#InputDefinitions('xy', type => 'tex', noltxml => 1);
+
+#**********************************************************************
+
+1;

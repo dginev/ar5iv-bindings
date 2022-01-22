@@ -1,0 +1,32 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  wiki.sty                                                           | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+
+InputDefinitions('harvmac', type => 'tex', noltxml => 1);
+
+DefMacro('\eqn{}{}',sub {
+  my ($gullet, $label, $content) = @_;
+  DefMacroI($label, undef, Expand(Tokenize('(\secsym\the\meqno)')));
+  if (LookupValue('IN_MATH')) {
+    return $content; }
+  else {
+    return (T_CS('\@@BEGINDISPLAYMATH'),$content->unlist,T_CS('\@@ENDDISPLAYMATH')); }});
+
+#**********************************************************************
+
+1;
