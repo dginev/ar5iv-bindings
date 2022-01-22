@@ -2461,6 +2461,7 @@ RawTeX(<<'EOL');
 
 EOL
 
+# see e.g. arxiv:hep-th/0002007
 DefMacro('\eqn Token','\advance\equanumber by 1\relax\xdef#1{\the\equanumber}', locked=>1);
 DefMacro('\leqn Token','\advance\equanumber by 1\relax\xdef#1{\the\equanumber}', locked=>1);
 1;
