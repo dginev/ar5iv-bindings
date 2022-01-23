@@ -19,8 +19,24 @@ use LaTeXML::Package;
 
 Warn('missing_file', 'xy.tex', $STATE->getStomach->getGullet,'xy.tex is not implemented, the features here are a stub.');
 
-
-DefConstructor('\xymatrix {Undigested}','<ltx:ERROR>{xymatrx}</ltx:ERROR>', locked=>1);
+DefConstructor('\xymatrix','<ltx:ERROR>{xymatrix}</ltx:ERROR>', 
+  beforeDigest => sub {
+    my($stomach)=@_;
+    # discard everything following until the first argument's } is closed.
+    # trying to avoid writing a proper signature interpreter for now.
+    $stomach->bgroup;
+    my $gullet = $stomach->getGullet;
+    my $level = 0;
+    while (my $token=$gullet->readToken) {
+      if ($$token[1] == CC_BEGIN) {
+        $level+=1; }
+      elsif ($$token[1] == CC_END) {
+        $level-=1;
+        last if ($level<=0); } }
+    $stomach->egroup;
+    return; },
+  mode => 'text',
+  locked=>1);
 DefMacro('\vcenter{}','#1',locked=>1);
 DefMacro('\xyoption{}','',locked=>1);
 DefMacro('\ar','\relax',locked=>1);
