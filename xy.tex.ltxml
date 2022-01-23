@@ -19,6 +19,7 @@ use LaTeXML::Package;
 
 Warn('missing_file', 'xy.tex', $STATE->getStomach->getGullet,'xy.tex is not implemented, the features here are a stub.');
 
+our $xymatrix_error_reported;
 DefConstructor('\xymatrix','<ltx:ERROR>{xymatrix}</ltx:ERROR>', 
   beforeDigest => sub {
     my($stomach)=@_;
@@ -34,11 +35,16 @@ DefConstructor('\xymatrix','<ltx:ERROR>{xymatrix}</ltx:ERROR>',
         $level-=1;
         last if ($level<=0); } }
     $stomach->egroup;
+    if (!$xymatrix_error_reported) {
+      $xymatrix_error_reported = 1;
+      Error('undefined','{xymatrix}',$gullet,'{xymatrix} has no support, this is a stub binding.'); }
     return; },
   mode => 'text',
   locked=>1);
 DefMacro('\vcenter{}','#1',locked=>1);
 DefMacro('\xyoption{}','',locked=>1);
+DefMacro('\xymatrixrowsep{}','',locked=>1);
+DefMacro('\xymatrixcolsep{}','',locked=>1);
 DefMacro('\ar','\relax',locked=>1);
 
 DefMacroI(T_CS('\xydef@'),'{}','\gdef#1');
