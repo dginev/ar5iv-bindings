@@ -1,0 +1,37 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  breqn.sty                                                          | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+
+Warn('missing_file', 'breqn.sty', $STATE->getStomach->getGullet, 'breqn.sty is not implemented and will not be interpreted raw.');
+
+#**********************************************************************
+
+# Forbid loading this package, even locally, until we 
+# can implement it natively
+#InputDefinitions('breqn', type => 'sty', noltxml => 1);
+
+DefMacro('\condition', '\text');
+DefMacro('\hiderel{}', '#1');
+DefMacroI(T_CS('\begin{dmath}'), 'OptionalUndigested', T_CS('\begin{equation}'));
+DefMacro(T_CS('\end{dmath}'), T_CS('\end{equation}'));
+DefMacroI(T_CS('\begin{dmath*}'), 'OptionalUndigested', T_CS('\begin{equation*}'));
+DefMacro(T_CS('\end{dmath*}'), T_CS('\end{equation*}'));
+
+#**********************************************************************
+
+1;
