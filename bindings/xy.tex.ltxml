@@ -43,6 +43,9 @@ DefConstructor('\xymatrix','<ltx:ERROR>{xymatrix}</ltx:ERROR>',
   locked=>1);
 DefMacro('\vcenter{}','#1',locked=>1);
 DefMacro('\xyoption{}','',locked=>1);
+DefMacro('\SelectTips{}{}','',locked=>1);
+Let('\selecttips','\SelectTips');
+
 DefMacro('\xymatrixrowsep{}','',locked=>1);
 DefMacro('\xymatrixcolsep{}','',locked=>1);
 DefMacro('\ar','\relax',locked=>1);
