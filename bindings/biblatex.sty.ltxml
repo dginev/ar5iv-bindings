@@ -1,6 +1,6 @@
 # -*- CPERL -*-
 # /=====================================================================\ #
-# |  xypic.tex                                                          | #
+# |  biblatex.sty                                                       | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
@@ -17,10 +17,14 @@ use LaTeXML::Package;
 
 #**********************************************************************
 
-Warn('missing_file', 'xypic.sty', $STATE->getStomach->getGullet, 'xypic.sty is not implemented, the features here are a stub.');
+Warn('missing_file', 'biblatex.sty', $STATE->getStomach->getGullet,
+  'biblatex.sty is not implemented and will not be interpreted raw.');
 
-# Instead, stubs:
-InputDefinitions('xypic.tex', type => 'ltxml', noltxml => 0);
+#**********************************************************************
+
+# Forbid loading this package, even locally, until we get our
+# own bibliography support hooked in.
+#InputDefinitions('biblatex', type => 'sty', noltxml => 1);
 
 #**********************************************************************
 

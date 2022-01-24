@@ -1,6 +1,6 @@
 # -*- CPERL -*-
 # /=====================================================================\ #
-# |  xypic.tex                                                          | #
+# |  hobby.code.tex                                                     | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
@@ -17,10 +17,14 @@ use LaTeXML::Package;
 
 #**********************************************************************
 
-Warn('missing_file', 'xypic.sty', $STATE->getStomach->getGullet, 'xypic.sty is not implemented, the features here are a stub.');
+Warn('missing_file', 'hobby.code.tex', $STATE->getStomach->getGullet,
+  'hobby.code.tex is not implemented and will not be interpreted raw.');
 
-# Instead, stubs:
-InputDefinitions('xypic.tex', type => 'ltxml', noltxml => 0);
+#**********************************************************************
+
+# Forbid loading this package, even locally, until we get our LaTeX 3
+# support ready to handle 2111.02755
+#InputDefinitions('hobby.code', type => 'tex', noltxml => 1);
 
 #**********************************************************************
 

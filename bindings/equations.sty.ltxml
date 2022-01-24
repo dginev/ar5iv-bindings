@@ -39,7 +39,7 @@ DefEnvironment('{eqalignno}',
     $_[0]->getGullet->unread(T_CS('\@start@alignment'));
     Let(T_MATH, T_CS('\@dollar@in@mathmode'));
     return; },
-  afterDigestBody => sub { 
+  afterDigestBody => sub {
     afterEquation($_[1]);
     $_[0]->getGullet->unread(T_CS('\@finish@alignment'));
     return; },
@@ -59,7 +59,7 @@ DefEnvironment('{eqalignno*}',
     $_[0]->getGullet->unread(T_CS('\@start@alignment'));
     Let(T_MATH, T_CS('\@dollar@in@mathmode'));
     return; },
-  afterDigestBody => sub { 
+  afterDigestBody => sub {
     afterEquation($_[1]);
     $_[0]->getGullet->unread(T_CS('\@finish@alignment'));
     return; },

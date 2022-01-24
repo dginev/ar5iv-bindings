@@ -17,18 +17,18 @@ use LaTeXML::Package;
 
 #**********************************************************************
 
-Warn('missing_file', 'xypic.tex', $STATE->getStomach->getGullet,'xypic.tex is not implemented, the features here are a stub.');
+Warn('missing_file', 'xypic.tex', $STATE->getStomach->getGullet, 'xypic.tex is not implemented, the features here are a stub.');
 
 # Too dangerous for now.
 #InputDefinitions('xypic', type => 'tex', noltxml => 1);
 
 # Instead, stubs:
-InputDefinitions('xy.tex',type=>'ltxml',noltxml=>0);
+InputDefinitions('xy.tex', type => 'ltxml', noltxml => 0);
 
-DefMacro('\xymatrixcolsep','');
-DefMacro('\xymatrixrowsep','');
-DefMacro('\UseComputerModernTips','');
-DefMacro('\CompileMatrices','');
+DefMacro('\xymatrixcolsep',        '');
+DefMacro('\xymatrixrowsep',        '');
+DefMacro('\UseComputerModernTips', '');
+DefMacro('\CompileMatrices',       '');
 
 #**********************************************************************
 

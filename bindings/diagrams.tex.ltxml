@@ -20,7 +20,7 @@ use LaTeXML::Package;
 InputDefinitions('diagrams', type => 'tex', noltxml => 1);
 
 # see arXiv:math/0002180 for an ambitious use.
-DefEnvironment('{diagram}', 'diagram.tex is currently unsupported', locked=>1);
+DefEnvironment('{diagram}', 'diagram.tex is currently unsupported', locked => 1);
 
 #**********************************************************************
 
