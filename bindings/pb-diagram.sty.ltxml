@@ -1,0 +1,50 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  pb-diagram.sty                                                        | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+
+Warn('missing_file', 'pb-diagram.sty', $STATE->getStomach->getGullet, 'pb-diagram.sty is not implemented and will not be interpreted raw.');
+
+#**********************************************************************
+
+# Forbid loading this package, even locally, until we get good enough at
+# reusing the internals for good SVG
+#InputDefinitions('pb-diagram', type => 'sty', noltxml => 1);
+
+our $diagram_error_reported;
+DefConstructorI(T_CS('\begin{diagram}'), undef, '<ltx:ERROR>{diagram}</ltx:ERROR>',
+  beforeDigest => sub {
+    my ($stomach) = @_;
+    $stomach->bgroup;
+    my $gullet = $stomach->getGullet;
+    if (!$diagram_error_reported) {
+      $diagram_error_reported = 1;
+      Error('undefined', '{diagram}', $gullet, '{diagram} has no support, this is a stub binding.'); }
+    # discard contents;
+    while (my $upto_end = $gullet->readUntil(T_CS('\end'))) {
+      my $drop_open = $gullet->readToken;
+      my $env       = $gullet->readBalanced;
+      last if ToString($env) eq 'diagram'; }
+    $stomach->egroup;
+    return; },
+  bounded => 1,
+  mode    => 'text',
+  locked  => 1);
+DefMacro('\enddiagram', '\relax');
+#**********************************************************************
+
+1;
