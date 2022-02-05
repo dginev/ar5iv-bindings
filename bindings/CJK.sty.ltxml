@@ -1,0 +1,29 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  CJK.sty                                                            | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+
+# Graciously borrowed from arxiv-vanity/engrafo/latexml/packages/CJK.sty.ltxml
+# seems to make 1705.06031 work
+DefEnvironment("{CJK}{}{}",  "#body");
+DefEnvironment("{CJK*}{}{}", "#body");
+
+DefMacro('\CJKfamily{}', '#1');
+
+#**********************************************************************
+
+1;
