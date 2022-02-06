@@ -1,0 +1,115 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  minted.sty                                                         | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#======================================================================
+RequirePackage('ifplatform');
+#RequirePackage('xstring');
+RequirePackage('xcolor');
+RequirePackage('lineno');
+RequirePackage('framed');
+RequirePackage('newfloat');
+RequirePackage('calc');
+RequirePackage('kvoptions');
+RequirePackage('etoolbox');
+# No effect from keyval.sty
+# No effect from pdftexcmds.sty
+#RequirePackage('fvextra');
+RequirePackage('fancyvrb');
+# No effect from shellesc.sty
+# No effect from ifthen.sty
+
+# TODO: Stub as a listing for now
+RequirePackage('listings');
+
+DeclareOption('chapter', sub {return;});
+
+#  /--------------------------------------------------------------------\
+# | INCOMPLETE IMPLEMENTATION                                            |
+# | mostly stubs that allow content-preservation, but no features.       |
+#  \--------------------------------------------------------------------/
+DefMacro('\DeleteFile[]{}',Tokens());
+DefMacro('\MintedPygmentize','pygmentize');
+DefMacro('\ProvideDirectory{}',Tokens());
+DefMacro('\TestAppExists{}',Tokens());
+DefConditional('\ifAppExists');
+DefMacro('\inputminted[]{}{}',sub {
+  my @contents = ();
+  if (my $pathname = FindFile(ToString($_[3]))) {
+    my @lines = ();
+    my $mouth = LaTeXML::Core::Mouth->create($pathname, notes => 1);
+    while (defined(my $line = $mouth->readRawLine)) {
+      push(@lines, $line); }
+    @contents = Explode(join("\n", @lines)); }
+  return (T_CS('\begin{minted}'),T_BEGIN,$_[2],T_END,
+    @contents,
+    T_CS('\end'),T_BEGIN,T_OTHER('minted'),T_END); });
+DefMacro('\listoflistings',Tokens());
+DefMacro('\listingscaption','Listing');
+DefMacro('\listoflistingscaption','List of listings');
+
+DefPrimitive('\newmint{}{}', sub {
+  my ($name) = ToString($_[1]);
+  DefMacro(T_CS("\\$name"),undef, T_CS('\verb'));
+  return; });
+  
+DefMacro('\newmintinline{}{}', sub {
+  my ($name) = ToString($_[1]);
+  DefMacro(T_CS("\\".$name.'inline'),undef, T_CS('\verb'));
+  return; });
+  
+sub mintedEnvBody {
+  my ($kind, $gullet, $opt, $main) = @_;
+  # collect contents;
+  my @contents = ();
+  while (my $upto_end = $gullet->readUntil(T_CS('\end'))) {
+    push(@contents, $upto_end);
+    my $drop_open = $gullet->readToken;
+    my $env       = $gullet->readBalanced;
+    if (ToString($env) eq $kind) {
+      last; }
+    else {
+      push(@contents, T_CS('\end'), T_BEGIN, $env, T_END); } }
+      
+  $STATE->getStomach->bgroup;
+  AssignValue(current_environment => 'lstlisting');
+  DefMacroI('@currenvir', undef, 'lstlisting');
+  my $text = join('',map {ToString($_)} @contents);
+  return lstProcessDisplay(Tokens(), $text); }
+
+DefPrimitive('\newminted{}{}', sub {
+  my ($env) = ToString($_[1]);
+  DefMacroI(T_CS("\\begin{$env}"),"[]{}",sub { return mintedEnvBody($env, @_); });
+  DefMacroI(T_CS("\\begin{$env*}"),"[]{}",sub { return mintedEnvBody("$env*", @_); });
+  return; });
+  
+DefPrimitive('\newmintedfile[]{}{}', sub {
+  my ($stomach, $macro, $language) = @_;
+  if ($macro) {
+    DefMacroI($macro, undef, T_CS('\inputminted')); }
+  else {
+    DefMacroI(T_CS("\\".ToString($language).'file'), 
+              undef, T_CS('\inputminted')); } });
+
+DefMacro('\setminted[]{}','');
+DefMacro('\setmintedinline[]{}','');
+DefMacro('\usemintedstyle[]{}','');
+DefMacro('\SetupFloatingEnvironment{}{}','');
+
+DefMacro('\mint[]{}','\verb');
+DefMacro('\mintinline[]{}','\verb');
+DefMacroI(T_CS('\begin{minted}'),'[]{}',sub { return mintedEnvBody('minted', @_); });
+
+DefMacroI(T_CS('\begin{listing}'), undef, T_CS('\begin{figure}'));
+DefMacroI(T_CS('\end{listing}'), undef, T_CS('\end{figure}'));
+
+#======================================================================
+
+1;
