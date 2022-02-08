@@ -1,6 +1,6 @@
 # -*- CPERL -*-
 # /=====================================================================\ #
-# |  harvmac.sty                                                        | #
+# |  libertine.sty                                                      | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
@@ -17,16 +17,9 @@ use LaTeXML::Package;
 
 #**********************************************************************
 
-InputDefinitions('harvmac', type => 'tex', noltxml => 1);
-
-DefMacro('\eqn{}{}', sub {
-    my ($gullet, $label, $content) = @_;
-    DefMacroI($label, undef, Expand(Tokenize('(\secsym\the\meqno)')));
-    if (LookupValue('IN_MATH')) {
-      return $content; }
-    else {
-      return (T_CS('\@@BEGINDISPLAYMATH'), $content->unlist, T_CS('\@@ENDDISPLAYMATH')); } });
-
-#**********************************************************************
+RequirePackage('ifxetex');
+RequirePackage('ifluatex');
+RequirePackage('xkeyval');
+RequirePackage('textcomp');
 
 1;
