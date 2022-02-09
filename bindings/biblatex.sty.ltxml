@@ -15,6 +15,7 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
+RequirePackage('natbib');
 #**********************************************************************
 
 Warn('missing_file', 'biblatex.sty', $STATE->getStomach->getGullet,
@@ -26,6 +27,168 @@ Warn('missing_file', 'biblatex.sty', $STATE->getStomach->getGullet,
 # own bibliography support hooked in.
 #InputDefinitions('biblatex', type => 'sty', noltxml => 1);
 
+DefMacro('\unspace',                '\relax');     # ?
+DefMacro('\blx@imc@resetpunctfont', '\relax');     # ?
+DefMacro('\blx@postpunct',          '\@empty');    # ?
+DefRegister('\c@highnamepenalty' => Number(0));
+
+DefMacro('\addslash', '/\hskip\z@skip');
+# ?
+DefMacro('\addspace',        '\space');
+DefMacro('\addnbspace',      '\space');
+DefMacro('\addthinspace',    '\space');
+DefMacro('\addnbthinspace',  '\space');
+DefMacro('\addlowpenspace',  '\space');
+DefMacro('\addhighpenspace', '\space');
+DefMacro('\addlpthinspace',  '\space');
+DefMacro('\addhpthinspace',  '\space');
+DefMacro('\addabbrvspace',   '\space');
+DefMacro('\addabthinspace',  '\space');
+DefMacro('\adddotspace',     '\unspace\adddot\space');
+
+DefMacro('\noligature',   '\nobreak\hskip\z@skip');
+DefMacro('\hyphen',       '\nobreak-\nobreak\hskip\z@skip');
+DefMacro('\nbhyphen',     '\nobreak\mbox{-}\nobreak\hskip\z@skip');
+DefMacro('\hyphenate',    '\nobreak\-\nobreak\hskip\z@skip');
+DefMacro('\allowhyphens', '\nobreak\hskip\z@skip');
+
+DefMacro('\bibinitperiod',      '\adddot');
+DefMacro('\bibinithyphendelim', '.\mbox{-}');
+DefMacro('\bibnamedelima',      '\addhighpenspace');
+DefMacro('\bibnamedelimb',      '\addlowpenspace');
+DefMacro('\bibnamedelimc',      '\addhighpenspace');
+DefMacro('\bibnamedelimd',      '\addlowpenspace');
+DefMacro('\bibnamedelimi',      '\addnbspace');
+
+DefMacro('\datalist[]{}', '');
+DefMacro('\enddatalist', sub {
+    return (
+      T_CS('\thebibliography'), T_BEGIN, T_OTHER(LookupValue('biblatex_entry_count')), T_END,
+      @{ LookupValue('rebuilt_bibtex_variant') || [] },
+      T_CS('\endthebibliography'));
+});
+DefMacro('\entry{}{}{}', sub {
+    AssignValue('biblatex_entry', {
+        key => $_[1], type => $_[2] }, 'global');
+    return; }, locked => 1);
+
+DefMacro('\endentry', sub {
+    my ($gullet) = @_;
+    my $entry = LookupValue('biblatex_entry') || {};
+    # reset entry just in case
+    AssignValue('biblatex_entry', undef, 'global');
+    my $label = $$entry{'labelalpha'};
+    # let's say we can not yet find the right label,
+    # as the biblatex support here is minimal.
+    # Rather than failing loudly, let's make a simple default one.
+    if (!$label) {
+      my $label_int = 1 + (LookupValue('biblatex_auto_label') || 0);
+      AssignValue('biblatex_auto_label', $label_int, 'global');
+      $label = T_OTHER("$label_int"); }
+
+    # record this for {thebibliography}
+    AssignValue('biblatex_entry_count', 1 + (LookupValue('biblatex_entry_count') || 0), 'global');
+
+    my $variant = LookupValue('rebuilt_bibtex_variant') || [];
+    push @$variant, (
+      T_CS('\bibitem'), T_OTHER('['), $label, T_OTHER(']'), T_BEGIN, $$entry{key}, T_END);
+    my $authors        = $$entry{authors};
+    my @authors_tokens = ();
+   # TODO: Important missing piece: we need to use the "namehash" to get the authors in the right order.
+    my $author_count = scalar(keys %$authors);
+    my $author_index = 0;
+    for my $author_key (keys %$authors) {
+      $author_index += 1;
+      if (@authors_tokens) {
+        if ($author_index < $author_count) {
+          push(@authors_tokens, T_OTHER(','), T_SPACE); }
+        else {
+          push(@authors_tokens, T_SPACE, T_OTHER('and'), T_SPACE); } }
+      push(@authors_tokens, ExplodeText($$authors{$author_key})); }
+    push @$variant, @authors_tokens;
+    push @$variant, (T_CS('\newblock'), T_OTHER('`'), T_OTHER('`'), $$entry{title}, T_OTHER("'"), T_OTHER("'")) if $$entry{title};
+    push @$variant, (T_CS('\newblock'), T_OTHER("In"), T_SPACE, T_CS('\emph'), T_BEGIN, $$entry{booktitle}, T_END) if $$entry{booktitle};
+    push @$variant, (T_OTHER(','), T_SPACE, $$entry{series}) if $$entry{series};
+    push @$variant, (T_CS('\newblock'), $$entry{publisher})  if $$entry{publisher};
+    push @$variant, (T_OTHER(','), T_SPACE, $$entry{year})   if $$entry{year};
+    push @$variant, (T_OTHER(','), T_SPACE, T_OTHER('pp.'), T_SPACE, $$entry{pages}) if $$entry{pages};
+    AssignValue('rebuilt_bibtex_variant', $variant, 'global');
+    return ();
+}, locked => 1);
+
+DefKeyVal('BiblatexAuthor', 'given',   '');
+DefKeyVal('BiblatexAuthor', 'giveni',  '');
+DefKeyVal('BiblatexAuthor', 'family',  '');
+DefKeyVal('BiblatexAuthor', 'familyi', '');
+
+DefMacro('\name{}{}{}{}', sub {
+    my ($gullet, $type, $count, $unk, $content) = @_;
+    # only handle authors for now;
+    return unless ToString($type) eq 'author';
+    my $author_count   = int(ToString($count));
+    my %authors        = ();
+    my @content_tokens = $content->unlist;
+    $gullet->unread(@content_tokens);
+    while ($author_count > 0) {
+      $author_count--;
+      my $author_arg = $gullet->readArg;
+      $gullet->unread($author_arg->unlist);
+      my $author_hash = $gullet->readArg;
+      # create a new set of Key-Value arguments
+      my $keyvals = LaTeXML::Core::KeyVals->new(undef, 'BiblatexAuthor', setInternals => 1);
+      # and read it from the gullet
+      $keyvals->readFrom($gullet, T_END);
+      if (ToString($author_hash) =~ /^hash=(.+)$/) {
+        $authors{$1} = ToString(Expand($keyvals->getValue('given') || $keyvals->getValue('giveni')))
+          . ' '
+          . (ToString(Expand($keyvals->getValue('family') || $keyvals->getValue('familyi'))));
+        # and drop any remaining braces.
+        $authors{$1} =~ s/[}{]//g; } }
+    # now that we have the authors, try to generate a sensible bibitem
+    my $entry = LookupValue('biblatex_entry');
+    $$entry{authors} = \%authors;
+    return ();
+}, locked => 1);
+
+DefMacro('\list{}{}{}', sub {
+    my $entry = LookupValue('biblatex_entry');
+    # TODO: More support needed if $_[2] is greater than 1
+    $$entry{ ToString($_[1]) } = Expand($_[3]);
+    return; }, locked => 1);
+
+DefMacro('\AtEveryBibitem{}',   '');
+DefMacro('\printbibliography',  '');
+DefMacro('\keyw{}',             '');
+DefMacro('\bibinitdelim',       '');
+DefMacro('\bibinithyphendelim', '-');
+DefMacro('\bibrangedash',       '-');
+DefMacro('\bibnamedelimi',      ' ');
+DefPrimitive('\field{}{}', sub {
+    my $entry = LookupValue('biblatex_entry');
+    $$entry{ ToString($_[1]) } = Expand($_[2]);
+    return;
+}, locked => 1);
+DefPrimitive('\strng{}{}', sub {
+    my $entry = LookupValue('biblatex_entry');
+    $$entry{ ToString($_[1]) } = Expand($_[2]);
+    return;
+}, locked => 1);
+DefMacro('\range{}{}', '');
+DefEnvironment('{refsection}', '');
+DefEnvironment('{verb}',       '');
 #**********************************************************************
+
+DefPrimitive('\addbibresource{}', sub {
+    my @file_list = split(/\s*,\s*/, ToString($_[1]));
+    PushValue('biblatex_resources', @file_list);
+    return; }, locked => 1);
+
+DefMacro('\printbibliography', sub {
+    my @resources = ();
+    while (my $res = PopValue('biblatex_resources')) {
+      push(@resources, T_OTHER(','), T_SPACE) if @resources;
+      push(@resources, T_OTHER($res)); }
+    return (T_CS('\bibliography'), T_BEGIN, @resources, T_END);
+}, locked => 1);
 
 1;
