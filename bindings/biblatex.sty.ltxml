@@ -18,7 +18,7 @@ use LaTeXML::Package;
 #**********************************************************************
 
 Warn('missing_file', 'biblatex.sty', $STATE->getStomach->getGullet,
-  'biblatex.sty is not implemented and will not be interpreted raw.');
+  'biblatex.sty is only minimally stubbed and will not be interpreted raw.');
 
 #**********************************************************************
 
@@ -36,17 +36,23 @@ RequirePackage('babel_support');
 #InputDefinitions('biblatex', type => 'sty', noltxml => 1);
 
 # TODO: Alternative citation styles
-DefMacro('\parencite',                               '\cite');
-DefMacro('\Parencite',                               '\cite');
-DefMacro('\Cite',                                    '\cite');
-DefMacro('\citet OptionalMatch:* [][] Semiverbatim', '\cite{#4}');
-DefMacro('\citep OptionalMatch:* [][] Semiverbatim', '\cite{#4}');
-DefMacro('\fullcite',                                '\cite');
-DefMacro('\footcite',                                '\cite');
-DefMacro('\footcitetext',                            '\cite');
-DefMacro('\smartcite',                               '\cite');
-DefMacro('\textcite',                                '\cite');
-DefMacro('\supercite',                               '\cite');
+DefMacro('\parencite',                                 '\cite');
+DefMacro('\Parencite',                                 '\cite');
+DefMacro('\Cite',                                      '\cite');
+DefMacro('\citet OptionalMatch:* [][] Semiverbatim',   '\cite{#4}');
+DefMacro('\citep OptionalMatch:* [][] Semiverbatim',   '\cite{#4}');
+DefMacro('\citealt OptionalMatch:* [][] Semiverbatim', '\cite{#4}');
+DefMacro('\citealp OptionalMatch:* [][] Semiverbatim', '\cite{#4}');
+DefMacro('\citenum',                                   '\cite');
+DefMacro('\autocite',                                  '\cite');
+DefMacro('\fullcite',                                  '\cite');
+DefMacro('\footcite',                                  '\cite');
+DefMacro('\footcitetext',                              '\cite');
+DefMacro('\smartcite',                                 '\cite');
+DefMacro('\textcite',                                  '\cite');
+DefMacro('\Textcite',                                  '\cite');
+DefMacro('\supercite',                                 '\cite');
+DefMacro('\citeauthor',                                '\cite');
 
 #DefMacro('\parencites[]{}[][]{}[][]{}','');
 #DefMacro('\cites[]{}[][]{}[][]{}','');
@@ -97,7 +103,9 @@ sub biblatex_as_thebibliography {
     AssignValue('rebuilt_bibtex_variant', [], 'global');
     my $entry_count = LookupValue('biblatex_entry_count');
     AssignValue('biblatex_entry_count', 0, 'global');
-    return (T_CS('\thebibliography'), T_BEGIN, T_OTHER($entry_count), T_END, @rebuilt_variant, T_CS('\endthebibliography')); }
+    my $preamble = LookupValue('bibtex_preamble');
+    my @preamble = $preamble ? $preamble->unlist : ();
+    return (@preamble, T_CS('\thebibliography'), T_BEGIN, T_OTHER($entry_count), T_END, @rebuilt_variant, T_CS('\endthebibliography')); }
   else {
     return (); } }
 
@@ -123,7 +131,7 @@ DefMacro('\endentry', sub {
     if (!$label) {
       my $label_int = 1 + (LookupValue('biblatex_auto_label') || 0);
       AssignValue('biblatex_auto_label', $label_int, 'global');
-      $label = T_OTHER("$label_int"); }
+      $label = "$label_int"; }
     else {
       my $unique_labels = LookupValue('biblatex_author_labels') || {};
       if ($$unique_labels{$label}) {
@@ -176,7 +184,9 @@ DefMacro('\endentry', sub {
       @authors_tokens = ExplodeText($author_names[0] . " et al."); }
     push @$variant, @authors_tokens;
     # Add all other metadata fields that may be relevant.
-    push @$variant, (T_CS('\newblock'), T_OTHER('`'), T_OTHER('`'), $$entry{title}, T_OTHER("'"), T_OTHER("'")) if $$entry{title};
+    if ($$entry{title}) {
+      push @$variant, T_CS('\newblock') if @authors_tokens; # no need to start a block if there were no authors.
+      push @$variant, (T_OTHER('`'), T_OTHER('`'), $$entry{title}, T_OTHER("'"), T_OTHER("'")); }
     push @$variant, (T_SPACE, $$entry{note}) if $$entry{note};
     if ($$entry{booktitle}) {
       push @$variant, (T_CS('\newblock'), T_OTHER("In"), T_SPACE, T_CS('\emph'), T_BEGIN, $$entry{booktitle}, T_END); }
@@ -305,6 +315,9 @@ DefPrimitive('\strng{}{}', sub {
     return;
 }, locked => 1);
 DefMacro('\range{}{}', '');
+DefPrimitive('\preamble{}', sub {
+    AssignValue('biblatex_preamble', $_[1], 'global');
+    return; }, locked => 1);
 
 sub init_verb {
   my ($gullet, $key) = @_;
@@ -361,6 +374,15 @@ DefMacro('\DeclareNameInputHandler{}{}',  Tokens());
 DefMacro('\DeclareListInputHandler{}{}',  Tokens());
 DefMacro('\DeclareFieldInputHandler{}{}', Tokens());
 
+DefMacro('\DeclareNameAlias{}{}',        Tokens());
+DefMacro('\DeclareIndexNameAlias{}{}',   Tokens());
+DefMacro('\DeclareListAlias{}{}',        Tokens());
+DefMacro('\DeclareIndexListAlias{}{}',   Tokens());
+DefMacro('\DeclareFieldAlias{}{}',       Tokens());
+DefMacro('\DeclareIndexFieldAlias{}{}',  Tokens());
+DefMacro('\DeclareNameWrapperAlias{}{}', Tokens());
+DefMacro('\DeclareListWrapperAlias{}{}', Tokens());
+
 DefMacro('\DeclareBibliographyExtras{}',    Tokens());
 DefMacro('\DeclareBibliographyStrings{}',   Tokens());
 DefMacro('\DeclareHyphenationExceptions{}', Tokens());
@@ -368,6 +390,20 @@ DefMacro('\InheritBibliographyExtras{}',    Tokens());
 DefMacro('\InheritBibliographyStrings{}',   Tokens());
 DefMacro('\UndeclareBibliographyExtras{}',  Tokens());
 DefMacro('\NewCount',                       '\newcount');
+DefMacro('\ExecuteBibliographyOptions[]{}', Tokens());
+DefMacro('\AtBeginBibliography{}',          Tokens());
+DefMacro('\AtEveryBibitem{}',               Tokens());
+DefMacro('\AtEveryEntrykey{}{}{}',          Tokens());
+DefMacro('\UseBibitemHook',                 Tokens());
+DefMacro('\UseUsedriverHook',               Tokens());
+DefMacro('\UseEveryCiteHook',               Tokens());
+DefMacro('\UseEveryCitekeyHook',            Tokens());
+DefMacro('\UseEveryMultiCiteHook',          Tokens());
+DefMacro('\UseNextCiteHook',                Tokens());
+DefMacro('\UseNextCitekeyHook',             Tokens());
+DefMacro('\UseNextMultiCiteHook',           Tokens());
+DefMacro('\UseVolciteHook',                 Tokens());
+DefMacro('\DeferNextCitekeyHook',           Tokens());
 
 DefMacro('\providebibmacro{}{}', Tokens());
 DefMacro('\renewbibmacro{}{}',   Tokens());
@@ -426,14 +462,11 @@ DefRegister('\bibhang'          => Glue(0, 0, 0));
 # DefMacro('\blxmcites',Tokens());
 # DefMacro('\category',Tokens());
 # DefMacro('\citeorder',Tokens());
-# DefMacro('\count',Tokens());
 # DefMacro('\currentfield',Tokens());
 # DefMacro('\currentlist',Tokens());
 # DefMacro('\currentname',Tokens());
 # DefMacro('\endrefsegment',Tokens());
-# DefMacro('\endverb',Tokens());
 # DefMacro('\except',Tokens());
-# DefMacro('\field',Tokens());
 # DefMacro('\finentry',Tokens());
 
 DefConditional('\ifandothers');
@@ -524,8 +557,8 @@ DefMacro('\sortalphaothers',  '\labelalphaothers');
 DefMacro('\sort[]{}', Tokens());
 
 # ?
-DefMacro('\true',               Tokens());
-DefMacro('\false',              Tokens());
+DefMacro('\true{}',             Tokens());
+DefMacro('\false{}',            Tokens());
 DefMacro('\type{}',             Tokens());
 DefMacro('\subtype{}',          Tokens());
 DefMacro('\theparenlevel',      Tokens());
