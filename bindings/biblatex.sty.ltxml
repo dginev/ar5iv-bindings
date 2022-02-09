@@ -124,7 +124,7 @@ DefMacro('\endentry', sub {
     my $entry = LookupValue('biblatex_entry') || {};
     # reset entry just in case
     AssignValue('biblatex_entry', undef, 'global');
-    my $label = ToString(Digest(Expand($$entry{'labelalpha'})));
+    my $label = ToString(Digest(Expand($$entry{'labelalpha'} || $$entry{'label'})));
     # let's say we can not yet find the right label,
     # as the biblatex support here is minimal.
     # Rather than failing loudly, let's make a simple default one.
@@ -204,6 +204,7 @@ DefMacro('\endentry', sub {
     push @$variant, (T_OTHER(','), T_SPACE, $$entry{howpublished}) if $$entry{howpublished};
     push @$variant, (T_OTHER(','), T_SPACE, $$entry{year})         if $$entry{year};
     push @$variant, (T_OTHER(','), T_SPACE, T_OTHER('pp.'), T_SPACE, $$entry{pages}) if $$entry{pages};
+    push @$variant, (T_CS('\newblock'), $$entry{organization}) if $$entry{organization};
     if ($$entry{doi}) {
       my @doi = $$entry{doi}->unlist;
       # drop leading spaces for cleaner URI
@@ -211,7 +212,6 @@ DefMacro('\endentry', sub {
         shift(@doi); }
       while ($doi[-1] && ($doi[-1]->getCatcode == CC_SPACE or Equals($doi[-1], T_OTHER('}')))) {
         pop(@doi); }
-
       push @$variant, (T_CS('\newblock'), T_OTHER("DOI:"), T_SPACE,
         T_CS('\href'), T_BEGIN, T_OTHER("https://dx.doi.org/"), @doi, T_END, T_BEGIN, @doi, T_END); }
     elsif ($$entry{url}) {
@@ -258,11 +258,13 @@ DefMacro('\name{}{}{}{}', sub {
         my $hash_value = $1;
         my $keyvals    = LaTeXML::Core::KeyVals->new(undef, 'BiblatexAuthor', setInternals => 1);
         $keyvals->readFrom($gullet, T_END);
-        $authors{$hash_value} = ToString(Digest(Expand($keyvals->getValue('given') || $keyvals->getValue('giveni'))))
+        my $fullname = ToString(Digest(Expand($keyvals->getValue('given') || $keyvals->getValue('giveni'))))
           . ' '
           . (ToString(Digest(Expand($keyvals->getValue('family') || $keyvals->getValue('familyi')))));
         # and drop any remaining braces.
-        $authors{$hash_value} =~ s/[}{]//g; }
+        $fullname =~ s/[}{]//g;
+        $fullname =~ s/\\thinspace/\x{2009}/g;
+        $authors{$hash_value} = $fullname; }
 
       # if $author_hash is empty, expect pre-laid out arguments
       else {
@@ -280,7 +282,11 @@ DefMacro('\name{}{}{}{}', sub {
         $giveni  = ref $giveni  ? ToString(Digest(Expand($giveni->unlist)))  : '';
         # what should be the key? should we try to refetch the hash?
         $authors{'names'} ||= [];
-        push @{ $authors{'names'} }, ($given . ' ' . $family);
+        my $fullname = $given . ' ' . $family;
+        # TODO: Why doesn't ToString(Digest()) return the unicode for \thinspace? and similar.
+        $fullname =~ s/[}{]//g;
+        $fullname =~ s/\\thinspace/\x{2009}/g;
+        push @{ $authors{'names'} }, $fullname;
     } }
 
     # now that we have the authors, try to generate a sensible bibitem
@@ -524,9 +530,9 @@ DefConditional('\ifusetranslator');
 
 # DefMacro('\inherit',Tokens());
 # DefMacro('\inset',Tokens());
-# DefMacro('\key',Tokens());
-# DefMacro('\keyw',Tokens());
-# DefMacro('\keyword',Tokens());
+DefMacro('\key{}',     Tokens());
+DefMacro('\keyw{}',    Tokens());
+DefMacro('\keyword{}', Tokens());
 # DefMacro('\literal',Tokens());
 # DefMacro('\losname',Tokens());
 # DefMacro('\missing',Tokens());
