@@ -1,0 +1,123 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  svn-multi.sty                                                      | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+
+Warn('missing_file', 'svn-multi.sty', $STATE->getStomach->getGullet,
+  'svn-multi.sty is not implemented and will not be interpreted raw.');
+
+#**********************************************************************
+
+#RequirePackage('currfile');
+RequirePackage('graphics');
+#RequirePackage('pgf');
+
+DefConditional('\ifsvnfilemodified');
+DefConditional('\ifsvnmodified');
+DefConditional('\ifsvnsubgroups');
+# DefMacro('\svn',Tokens());
+DefMacro('\svnFullAuthor OptionalMatch:* {}',Tokens());
+# DefMacro('\svnFullRevision',Tokens());
+DefMacro('\svnRegisterAuthor{}{}',Tokens());
+DefMacro('\svnRegisterRevision OptionalMatch:* {}{}',Tokens());
+# DefMacro('\svnaftertable',Tokens());
+# DefMacro('\svnauthor',Tokens());
+# DefMacro('\svnbeforetable',Tokens());
+DefMacro('\svncgtime',Tokens());
+DefMacro('\svncgtimezone',Tokens());
+DefMacro('\svncgtoday',Tokens());
+# DefMacro('\svnconsiderextensions',Tokens());
+# DefMacro('\svnconsidergraphic',Tokens());
+DefMacro('\svndate',Tokens());
+DefMacro('\svnday',Tokens());
+# DefMacro('\svnegetfile',Tokens());
+# DefMacro('\svnexternal',Tokens());
+# DefMacro('\svnexternalfile',Tokens());
+# DefMacro('\svnexternalgroup',Tokens());
+# DefMacro('\svnexternalpath',Tokens());
+DefMacro('\svnfileauthor',Tokens());
+DefMacro('\svnfiledate',Tokens());
+DefMacro('\svnfileday',Tokens());
+DefMacro('\svnfiledir',Tokens());
+DefMacro('\svnfilefname',Tokens());
+DefMacro('\svnfilehour',Tokens());
+DefMacro('\svnfileminute',Tokens());
+DefMacro('\svnfilemonth',Tokens());
+DefMacro('\svnfilerev',Tokens());
+DefMacro('\svnfilesecond',Tokens());
+DefMacro('\svnfiletime',Tokens());
+DefMacro('\svnfiletimezone',Tokens());
+DefMacro('\svnfiletimezonehour',Tokens());
+DefMacro('\svnfiletimezoneminute',Tokens());
+DefMacro('\svnfiletoday',Tokens());
+# DefMacro('\svnfileurl',Tokens());
+DefMacro('\svnfileyear',Tokens());
+# DefMacro('\svng',Tokens());
+# DefMacro('\svngraphicsgroup',Tokens());
+# DefMacro('\svngroup',Tokens());
+DefMacro('\svnhour',Tokens());
+DefMacro('\svnid{}',Tokens());
+DefMacro('\svnidlong',Tokens());
+# DefMacro('\svnignoreextensions',Tokens());
+# DefMacro('\svnignoregraphic',Tokens());
+# DefMacro('\svnkw',Tokens());
+# DefMacro('\svnkwLastChangedBy',Tokens());
+# DefMacro('\svnkwLastChangedDate',Tokens());
+# DefMacro('\svnkwLastChangedRevision',Tokens());
+# DefMacro('\svnkwRevision',Tokens());
+# DefMacro('\svnkwURL',Tokens());
+# DefMacro('\svnkwdef',Tokens());
+# DefMacro('\svnkwsave',Tokens());
+# DefMacro('\svnmainfilename',Tokens());
+# DefMacro('\svnmainurl',Tokens());
+DefMacro('\svnminute',Tokens());
+# DefMacro('\svnmonth',Tokens());
+DefMacro('\svnnolinkurl','#1');
+# DefMacro('\svnpdfdate',Tokens());
+# DefMacro('\svnrev',Tokens());
+# DefMacro('\svnrevisionsname',Tokens());
+DefMacro('\svnsecond',Tokens());
+# DefMacro('\svnsetcg',Tokens());
+# DefMacro('\svnsetmainfile',Tokens());
+# DefMacro('\svnsubgroup',Tokens());
+# DefMacro('\svnsubgroupsfalse',Tokens());
+# DefMacro('\svnsubgroupstrue',Tokens());
+# DefMacro('\svntabauthor',Tokens());
+# DefMacro('\svntabdate',Tokens());
+# DefMacro('\svntabfile',Tokens());
+# DefMacro('\svntabglobal',Tokens());
+# DefMacro('\svntabgroup',Tokens());
+# DefMacro('\svntablefoot',Tokens());
+# DefMacro('\svntablehead',Tokens());
+# DefMacro('\svntabrev',Tokens());
+# DefMacro('\svntabsubgroup',Tokens());
+DefMacro('\svntime',Tokens());
+DefMacro('\svntimezone',Tokens());
+DefMacro('\svntimezonehour',Tokens());
+DefMacro('\svntimezoneminute',Tokens());
+DefMacro('\svntoday',Tokens());
+DefMacro('\svnurl{}',Tokens());
+DefMacro('\svnyear',Tokens());
+DefMacro('\tableofrevisions',Tokens());
+# DefMacro('\thesvncg',Tokens());
+# DefMacro('\thesvngroup',Tokens());
+DefEnvironment('{svnfilerow}','');
+DefEnvironment('{svnglobalrow}','');
+DefEnvironment('{svngrouprow}','');
+DefEnvironment('{svnsubgrouprow}','');
+DefEnvironment('{svntable}','');
+#======================================================================
+1;
