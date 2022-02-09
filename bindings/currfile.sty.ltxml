@@ -1,0 +1,43 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  currfile.sty                                                       | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+Warn('missing_file', 'currfile.sty', $STATE->getStomach->getGullet,
+  'currfile.sty is only minimally stubbed and will not be interpreted raw.');
+
+#**********************************************************************
+
+DefMacro('\currfiledir',     Tokens());
+DefMacro('\currfilebase',    Tokens());
+DefMacro('\currfileext',     Tokens());
+DefMacro('\currfilename',    Tokens());
+DefMacro('\currfilepath',    Tokens());
+DefMacro('\currfileabsdir',  Tokens());
+DefMacro('\currfileabspath', Tokens());
+DefMacro('\getpwd',          Tokens());
+DefMacro('\thepwd',          Tokens());
+
+DefConditional('\ifcurrfiledir');
+DefConditional('\ifcurrfilebase');
+DefConditional('\ifcurrfileext');
+DefConditional('\ifcurrfilename');
+DefConditional('\ifcurrfilepath');
+DefConditional('\ifcurrfile');
+DefConditional('\ifcurrfileabsdir');
+DefConditional('\ifcurrfileabspath');
+
+#**********************************************************************
+1;
