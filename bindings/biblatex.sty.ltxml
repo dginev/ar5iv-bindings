@@ -23,7 +23,11 @@ Warn('missing_file', 'biblatex.sty', $STATE->getStomach->getGullet,
 #**********************************************************************
 
 RequirePackage('url');
-RequirePackage('natbib');
+# convenience addon, in case hyperref is not loaded.
+DefMacro('\href Verbatim {}', '\@@Url\href{}{}{#1}{#2}');
+#RequirePackage('natbib');
+# RequirePackage('logreq');
+RequirePackage('ifthen');
 # \grqq ? from where?
 RequirePackage('babel_support');
 
@@ -32,14 +36,20 @@ RequirePackage('babel_support');
 #InputDefinitions('biblatex', type => 'sty', noltxml => 1);
 
 # TODO: Alternative citation styles
-DefMacro('\parencite',    '\cite');
-DefMacro('\parencites',   '\cite');
-DefMacro('\fullcite',     '\cite');
-DefMacro('\footcite',     '\cite');
-DefMacro('\footcitetext', '\cite');
-DefMacro('\smartcite',    '\cite');
-DefMacro('\textcite',     '\cite');
-DefMacro('\supercite',    '\cite');
+DefMacro('\parencite',                               '\cite');
+DefMacro('\Parencite',                               '\cite');
+DefMacro('\Cite',                                    '\cite');
+DefMacro('\citet OptionalMatch:* [][] Semiverbatim', '\cite{#4}');
+DefMacro('\citep OptionalMatch:* [][] Semiverbatim', '\cite{#4}');
+DefMacro('\fullcite',                                '\cite');
+DefMacro('\footcite',                                '\cite');
+DefMacro('\footcitetext',                            '\cite');
+DefMacro('\smartcite',                               '\cite');
+DefMacro('\textcite',                                '\cite');
+DefMacro('\supercite',                               '\cite');
+
+#DefMacro('\parencites[]{}[][]{}[][]{}','');
+#DefMacro('\cites[]{}[][]{}[][]{}','');
 
 DefMacro('\unspace',                '\relax');     # ?
 DefMacro('\blx@imc@resetpunctfont', '\relax');     # ?
@@ -82,10 +92,14 @@ DefMacro('\lossort',      '', locked => 1);
 DefMacro('\refsection{}', '', locked => 1);
 
 sub biblatex_as_thebibliography {
-  return (
-    T_CS('\thebibliography'), T_BEGIN, T_OTHER(LookupValue('biblatex_entry_count')), T_END,
-    @{ LookupValue('rebuilt_bibtex_variant') || [] },
-    T_CS('\endthebibliography')); }
+  my @rebuilt_variant = @{ LookupValue('rebuilt_bibtex_variant') || [] };
+  if (@rebuilt_variant) {
+    AssignValue('rebuilt_bibtex_variant', [], 'global');
+    my $entry_count = LookupValue('biblatex_entry_count');
+    AssignValue('biblatex_entry_count', 0, 'global');
+    return (T_CS('\thebibliography'), T_BEGIN, T_OTHER($entry_count), T_END, @rebuilt_variant, T_CS('\endthebibliography')); }
+  else {
+    return (); } }
 
 DefMacro('\enddatalist',   \&biblatex_as_thebibliography, locked => 1);
 DefMacro('\endsortlist',   \&biblatex_as_thebibliography, locked => 1);
@@ -117,11 +131,7 @@ DefMacro('\endentry', sub {
     my $variant = LookupValue('rebuilt_bibtex_variant') || [];
     push @$variant, (
       T_CS('\bibitem'), T_OTHER('['), $label, T_OTHER(']'), T_BEGIN, $$entry{key}, T_END);
-    my $authors        = $$entry{authors};
-    my @authors_tokens = ();
-   # TODO: Important missing piece: we need to use the "namehash" to get the authors in the right order.
-    my $author_count = scalar(keys %$authors);
-    my $author_index = 0;
+    my $authors = $$entry{authors};
     # Two cases: either we have a DB-like hash,
     # or they were pre-typeset in "names"
     my @author_names = ();
@@ -141,22 +151,31 @@ DefMacro('\endentry', sub {
             next HASH_LOOP; } }
         last; } }
     # Put all authors together.
-    for my $author_name (@author_names) {
-      $author_index += 1;
-      if (@authors_tokens) {
-        if ($author_index < $author_count) {
-          push(@authors_tokens, T_OTHER(','), T_SPACE); }
-        else {
-          push(@authors_tokens, T_SPACE, T_OTHER('and'), T_SPACE); } }
-      push(@authors_tokens, ExplodeText($author_name)); }
+    my $author_count   = scalar(@author_names);
+    my @authors_tokens = ();
+    if (scalar(@author_names) < 4) {
+      my $author_index = 0;
+      for my $author_name (@author_names) {
+        $author_index += 1;
+        if (@authors_tokens) {
+          if ($author_index < $author_count) {
+            push(@authors_tokens, T_OTHER(','), T_SPACE); }
+          else {
+            push(@authors_tokens, T_SPACE, T_OTHER('and'), T_SPACE); } }
+        push(@authors_tokens, ExplodeText($author_name)); } }
+    else {    # special case: long lists use "et al."
+              # TODO: this is configurable via a package option, upgrade when possible.
+      @authors_tokens = ExplodeText($author_names[0] . " et al."); }
     push @$variant, @authors_tokens;
     # Add all other metadata fields that may be relevant.
     push @$variant, (T_CS('\newblock'), T_OTHER('`'), T_OTHER('`'), $$entry{title}, T_OTHER("'"), T_OTHER("'")) if $$entry{title};
     push @$variant, (T_SPACE, $$entry{note}) if $$entry{note};
-    push @$variant, (T_CS('\newblock'), T_OTHER("In"), T_SPACE, T_CS('\emph'), T_BEGIN, $$entry{booktitle}, T_END) if $$entry{booktitle};
-    if ($$entry{journaltitle}) {
-      push @$variant, (T_CS('\newblock'), T_CS('\emph'), T_BEGIN, $$entry{journaltitle}, T_END);
-      push @$variant, (T_SPACE, T_CS('\textbf'), T_BEGIN, $$entry{volume}, T_END) if $$entry{volume}; }
+    if ($$entry{booktitle}) {
+      push @$variant, (T_CS('\newblock'), T_OTHER("In"), T_SPACE, T_CS('\emph'), T_BEGIN, $$entry{booktitle}, T_END); }
+    elsif ($$entry{journaltitle}) {
+      push @$variant, (T_CS('\newblock'), T_OTHER("In"), T_SPACE, T_CS('\emph'), T_BEGIN, $$entry{journaltitle}, T_END); }
+    if ($$entry{volume} && ($$entry{booktitle} || $$entry{journaltitle} || $$entry{series})) {
+      push @$variant, (T_SPACE, T_CS('\textbf'), T_BEGIN, $$entry{volume}, T_END); }
     if ($$entry{series}) {
       push @$variant, (T_OTHER(','), T_SPACE, $$entry{series});
       push @$variant, (T_SPACE, $$entry{number}) if $$entry{number}; }
@@ -164,13 +183,17 @@ DefMacro('\endentry', sub {
       push @$variant, T_CS('\newblock');
       push(@$variant, $$entry{location}, T_OTHER(":"), T_SPACE) if $$entry{location};
       push @$variant, $$entry{publisher}; }
-    push @$variant, (T_OTHER(','), T_SPACE, $$entry{year}) if $$entry{year};
+    push @$variant, (T_OTHER(','), T_SPACE, $$entry{howpublished}) if $$entry{howpublished};
+    push @$variant, (T_OTHER(','), T_SPACE, $$entry{year})         if $$entry{year};
     push @$variant, (T_OTHER(','), T_SPACE, T_OTHER('pp.'), T_SPACE, $$entry{pages}) if $$entry{pages};
     if ($$entry{doi}) {
       my @doi = $$entry{doi}->unlist;
       # drop leading spaces for cleaner URI
-      while ($doi[0] && $doi[0]->getCatcode eq CC_SPACE) {
+      while ($doi[0] && ($doi[0]->getCatcode == CC_SPACE or Equals($doi[0], T_OTHER('{')))) {
         shift(@doi); }
+      while ($doi[-1] && ($doi[-1]->getCatcode == CC_SPACE or Equals($doi[-1], T_OTHER('}')))) {
+        pop(@doi); }
+
       push @$variant, (T_CS('\newblock'), T_OTHER("DOI:"), T_SPACE,
         T_CS('\href'), T_BEGIN, T_OTHER("https://dx.doi.org/"), @doi, T_END, T_BEGIN, @doi, T_END); }
     elsif ($$entry{url}) {
@@ -188,6 +211,7 @@ DefKeyVal('BiblatexAuthor', 'familyi', '');
 
 DefMacro('\name{}{}{}{}', sub {
     my ($gullet, $type, $count, $unk, $content) = @_;
+    $type = ToString($type);
     my $author_count = int(ToString($count));
     my %authors      = ();
     $gullet->unread($content->unlist);
@@ -196,8 +220,9 @@ DefMacro('\name{}{}{}{}', sub {
       my $author_arg = $gullet->readArg;
       $gullet->unread($author_arg->unlist);
       my $author_hash = $gullet->readArg;
-      # If we are given a hash, expect keyvals
-      if (ToString($author_hash) =~ /^hash=(.+)$/) {
+      # If we are given a hash, statrting with a capital letter,
+      # expect keyvals. This is a fragile heuristic, in absence of a full parser.
+      if (ToString($author_hash) =~ /^hash=([A-Z]\w+)$/) {
         my $hash_value = $1;
         my $keyvals    = LaTeXML::Core::KeyVals->new(undef, 'BiblatexAuthor', setInternals => 1);
         $keyvals->readFrom($gullet, T_END);
@@ -228,7 +253,10 @@ DefMacro('\name{}{}{}{}', sub {
 
     # now that we have the authors, try to generate a sensible bibitem
     my $entry = LookupValue('biblatex_entry');
-    $$entry{authors} = \%authors;
+    if ($type eq 'author') {
+      $$entry{authors} = \%authors; }
+    elsif ($type eq 'editor') {
+      $$entry{editors} = \%authors; }
     return ();
 }, locked => 1);
 
@@ -290,6 +318,8 @@ DefMacro('\printbibliography[]', sub {
 DefPrimitive('\warn{}', sub {
     Info('biblatex', 'warn', ToString(Expand($_[1])));
     return; });
+DefMacro('\xref{}',    '');
+DefMacro('\fakeset{}', '');
 
 #************************************************************************
 # language API : TODO?
@@ -300,5 +330,205 @@ DefMacro('\DefineHyphenationExceptions{}{}', '');
 DefMacro('\DefineBibliographyExtras{}{}',    '');
 DefMacro('\UndefineBibliographyExtras{}{}',  '');
 DefMacro('\DefineBibliographyStrings{}{}',   '');
+
+DefMacro('\DeclareNameFormat OptionalMatch:* []{}{}',  '');
+DefMacro('\DeclareListFormat OptionalMatch:* []{}{}',  '');
+DefMacro('\DeclareFieldFormat OptionalMatch:* []{}{}', '');
+
+DefMacro('\DeclareNameInputHandler{}{}',  Tokens());
+DefMacro('\DeclareListInputHandler{}{}',  Tokens());
+DefMacro('\DeclareFieldInputHandler{}{}', Tokens());
+
+DefMacro('\DeclareBibliographyExtras{}',    Tokens());
+DefMacro('\DeclareBibliographyStrings{}',   Tokens());
+DefMacro('\DeclareHyphenationExceptions{}', Tokens());
+DefMacro('\InheritBibliographyExtras{}',    Tokens());
+DefMacro('\InheritBibliographyStrings{}',   Tokens());
+DefMacro('\UndeclareBibliographyExtras{}',  Tokens());
+DefMacro('\NewCount',                       '\newcount');
+
+DefMacro('\providebibmacro{}{}', Tokens());
+DefMacro('\renewbibmacro{}{}',   Tokens());
+DefMacro('\defbibheading{}[]{}', Tokens());
+
+DefRegister('\labelnumberwidth' => Glue(0, 0, 0));
+DefRegister('\labelalphawidth'  => Glue(0, 0, 0));
+DefRegister('\biblabelsep'      => Glue(0, 0, 0));
+DefRegister('\bibnamesep'       => Glue(0, 0, 0));
+DefRegister('\bibitemsep'       => Glue(0, 0, 0));
+DefRegister('\bibinitsep'       => Glue(0, 0, 0));
+DefRegister('\bibparsep'        => Glue(0, 0, 0));
+DefRegister('\bibhang'          => Glue(0, 0, 0));
+
+# DefMacro('\NewOption',Tokens());
+# DefMacro('\NewValue',Tokens());
+# DefMacro('\NumcheckSetup',Tokens());
+# DefMacro('\RN',Tokens());
+# DefMacro('\RNfont',Tokens());
+# DefMacro('\Rn',Tokens());
+# DefMacro('\Rnfont',Tokens());
+# DefMacro('\bibclosebracket',Tokens());
+# DefMacro('\bibcloseparen',Tokens());
+# DefMacro('\bibcplstring',Tokens());
+# DefMacro('\bibcpsstring',Tokens());
+# DefMacro('\bibcpstring',Tokens());
+# DefMacro('\bibendnotewrapper',Tokens());
+# DefMacro('\bibfootnotewrapper',Tokens());
+# DefMacro('\bibinitdelim',Tokens());
+# DefMacro('\bibinithyphendelim',Tokens());
+# DefMacro('\bibinitperiod',Tokens());
+# DefMacro('\biblclstring',Tokens());
+# DefMacro('\biblcsstring',Tokens());
+# DefMacro('\biblcstring',Tokens());
+# DefMacro('\bibleftbracket',Tokens());
+# DefMacro('\bibleftparen',Tokens());
+# DefMacro('\biblstring',Tokens());
+# DefMacro('\bibname',Tokens());
+# DefMacro('\bibnamedelima',Tokens());
+# DefMacro('\bibnamedelimb',Tokens());
+# DefMacro('\bibnamedelimc',Tokens());
+# DefMacro('\bibnamedelimd',Tokens());
+# DefMacro('\bibnamedelimi',Tokens());
+# DefMacro('\bibopenbracket',Tokens());
+# DefMacro('\bibopenparen',Tokens());
+# DefMacro('\bibrightbracket',Tokens());
+# DefMacro('\bibrightparen',Tokens());
+# DefMacro('\bibsstring',Tokens());
+# DefMacro('\bibstring',Tokens());
+# DefMacro('\bibuclstring',Tokens());
+# DefMacro('\bibucsstring',Tokens());
+# DefMacro('\bibucstring',Tokens());
+# DefMacro('\blxauxsuffix',Tokens());
+# DefMacro('\blxendmcites',Tokens());
+# DefMacro('\blxmciteicmd',Tokens());
+# DefMacro('\blxmcites',Tokens());
+# DefMacro('\category',Tokens());
+# DefMacro('\citeorder',Tokens());
+# DefMacro('\count',Tokens());
+# DefMacro('\currentfield',Tokens());
+# DefMacro('\currentlist',Tokens());
+# DefMacro('\currentname',Tokens());
+# DefMacro('\endrefsegment',Tokens());
+# DefMacro('\endverb',Tokens());
+# DefMacro('\except',Tokens());
+# DefMacro('\field',Tokens());
+# DefMacro('\finentry',Tokens());
+
+DefConditional('\ifandothers');
+DefConditional('\ifbibindex');
+DefConditional('\ifbibliography');
+DefConditional('\ifbibstring');
+DefConditional('\ifcapital');
+DefConditional('\ifcategory');
+DefConditional('\ifcitation');
+DefConditional('\ifciteibid');
+DefConditional('\ifciteidem');
+DefConditional('\ifciteindex');
+DefConditional('\ifciteseen');
+DefConditional('\ifcurrentfield');
+DefConditional('\ifcurrentlist');
+DefConditional('\ifcurrentname');
+DefConditional('\ifentrycategory');
+DefConditional('\ifentrykeyword');
+DefConditional('\ifentryseen');
+DefConditional('\ifentrytype');
+DefConditional('\iffieldbibstring');
+DefConditional('\iffieldequalcs');
+DefConditional('\iffieldequals');
+DefConditional('\iffieldequalstr');
+DefConditional('\iffieldint');
+DefConditional('\iffieldnum');
+DefConditional('\iffieldnums');
+DefConditional('\iffieldpages');
+DefConditional('\iffieldsequal');
+DefConditional('\iffieldundef');
+DefConditional('\iffirstinits');
+DefConditional('\iffirstonpage');
+DefConditional('\iffootnote');
+DefConditional('\ifhyperref');
+DefConditional('\ifinteger');
+DefConditional('\ifkeyword');
+DefConditional('\ifloccit');
+DefConditional('\ifmoreitems');
+DefConditional('\ifmorenames');
+DefConditional('\ifnameequalcs');
+DefConditional('\ifnameequals');
+DefConditional('\ifnamesequal');
+DefConditional('\ifnameundef');
+DefConditional('\ifnatbibmode');
+DefConditional('\ifnumeral');
+DefConditional('\ifnumerals');
+DefConditional('\ifopcit');
+DefConditional('\ifpages');
+DefConditional('\ifsamepage');
+DefConditional('\ifsingletitle');
+DefConditional('\ifuseauthor');
+DefConditional('\ifuseeditor');
+DefConditional('\ifuseprefix');
+DefConditional('\ifusetranslator');
+
+# DefMacro('\inherit',Tokens());
+# DefMacro('\inset',Tokens());
+# DefMacro('\key',Tokens());
+# DefMacro('\keyw',Tokens());
+# DefMacro('\keyword',Tokens());
+# DefMacro('\literal',Tokens());
+# DefMacro('\losname',Tokens());
+# DefMacro('\missing',Tokens());
+# DefMacro('\mkbibsuperscript',Tokens());
+# DefMacro('\name',Tokens());
+# DefMacro('\newblockpunct',Tokens());
+# DefMacro('\newrefsection',Tokens());
+# DefMacro('\newrefsegment',Tokens());
+# DefMacro('\noinherit',Tokens());
+# DefMacro('\nolinkurl',Tokens());
+# DefMacro('\nopp',Tokens());
+# DefMacro('\or',Tokens());
+# DefMacro('\pno',Tokens());
+# DefMacro('\ppno',Tokens());
+# DefMacro('\preamble',Tokens());
+# DefMacro('\psq',Tokens());
+# DefMacro('\psqq',Tokens());
+# DefMacro('\segment',Tokens());
+# DefMacro('\set',Tokens());
+# DefMacro('\skipentry',Tokens());
+
+DefMacro('\ppspace',          '\addnbspace');
+DefMacro('\sqspace',          '\addnbspace');
+DefMacro('\labelalphaothers', '+');
+DefMacro('\sortalphaothers',  '\labelalphaothers');
+
+# ?
+DefMacro('\sort[]{}', Tokens());
+
+# ?
+DefMacro('\true',               Tokens());
+DefMacro('\false',              Tokens());
+DefMacro('\type{}',             Tokens());
+DefMacro('\subtype{}',          Tokens());
+DefMacro('\theparenlevel',      Tokens());
+DefMacro('\therefsection',      Tokens());
+DefMacro('\therefsegment',      Tokens());
+DefMacro('\theuniquelist',      Tokens());
+DefMacro('\theuniquename',      Tokens());
+DefMacro('\themulticitecount',  Tokens());
+DefMacro('\themulticitetotal',  Tokens());
+DefMacro('\thelownamepenalty',  Tokens());
+DefMacro('\themaxextraalpha',   Tokens());
+DefMacro('\themaxextrayear',    Tokens());
+DefMacro('\themaxitems',        Tokens());
+DefMacro('\themaxnames',        Tokens());
+DefMacro('\themaxparens',       Tokens());
+DefMacro('\theminitems',        Tokens());
+DefMacro('\theminnames',        Tokens());
+DefMacro('\theabbrvpenalty',    Tokens());
+DefMacro('\thecitecount',       Tokens());
+DefMacro('\thecitetotal',       Tokens());
+DefMacro('\thehighnamepenalty', Tokens());
+DefMacro('\theinstcount',       Tokens());
+DefMacro('\thelistcount',       Tokens());
+DefMacro('\theliststart',       Tokens());
+DefMacro('\theliststop',        Tokens());
+DefMacro('\thelisttotal',       Tokens());
 
 1;
