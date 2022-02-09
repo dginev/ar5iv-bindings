@@ -15,8 +15,6 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
-RequirePackage('url');
-RequirePackage('natbib');
 #**********************************************************************
 
 Warn('missing_file', 'biblatex.sty', $STATE->getStomach->getGullet,
@@ -24,9 +22,24 @@ Warn('missing_file', 'biblatex.sty', $STATE->getStomach->getGullet,
 
 #**********************************************************************
 
+RequirePackage('url');
+RequirePackage('natbib');
+# \grqq ? from where?
+RequirePackage('babel_support');
+
 # Forbid loading this package, even locally, until we get our
 # own bibliography support hooked in.
 #InputDefinitions('biblatex', type => 'sty', noltxml => 1);
+
+# TODO: Alternative citation styles
+DefMacro('\parencite',    '\cite');
+DefMacro('\parencites',   '\cite');
+DefMacro('\fullcite',     '\cite');
+DefMacro('\footcite',     '\cite');
+DefMacro('\footcitetext', '\cite');
+DefMacro('\smartcite',    '\cite');
+DefMacro('\textcite',     '\cite');
+DefMacro('\supercite',    '\cite');
 
 DefMacro('\unspace',                '\relax');     # ?
 DefMacro('\blx@imc@resetpunctfont', '\relax');     # ?
@@ -34,6 +47,8 @@ DefMacro('\blx@postpunct',          '\@empty');    # ?
 DefRegister('\c@highnamepenalty' => Number(0));
 
 DefMacro('\addslash', '/\hskip\z@skip');
+DefMacro('\adddot',   '.');
+
 # ?
 DefMacro('\addspace',        '\space');
 DefMacro('\addnbspace',      '\space');
@@ -63,14 +78,19 @@ DefMacro('\bibnamedelimi',      '\addnbspace');
 
 DefMacro('\datalist[]{}', '', locked => 1);
 DefMacro('\sortlist[]{}', '', locked => 1);
+DefMacro('\lossort',      '', locked => 1);
+DefMacro('\refsection{}', '', locked => 1);
 
 sub biblatex_as_thebibliography {
   return (
     T_CS('\thebibliography'), T_BEGIN, T_OTHER(LookupValue('biblatex_entry_count')), T_END,
     @{ LookupValue('rebuilt_bibtex_variant') || [] },
     T_CS('\endthebibliography')); }
-DefMacro('\enddatalist', \&biblatex_as_thebibliography, locked => 1);
-DefMacro('\endsortlist', \&biblatex_as_thebibliography, locked => 1);
+
+DefMacro('\enddatalist',   \&biblatex_as_thebibliography, locked => 1);
+DefMacro('\endsortlist',   \&biblatex_as_thebibliography, locked => 1);
+DefMacro('\endlossort',    \&biblatex_as_thebibliography, locked => 1);
+DefMacro('\endrefsection', \&biblatex_as_thebibliography, locked => 1);
 
 DefMacro('\entry{}{}{}', sub {
     AssignValue('biblatex_entry', {
@@ -102,23 +122,61 @@ DefMacro('\endentry', sub {
    # TODO: Important missing piece: we need to use the "namehash" to get the authors in the right order.
     my $author_count = scalar(keys %$authors);
     my $author_index = 0;
-    for my $author_key (keys %$authors) {
+    # Two cases: either we have a DB-like hash,
+    # or they were pre-typeset in "names"
+    my @author_names = ();
+    if ($$authors{names}) {
+      @author_names = @{ $$authors{names} }; }
+    else {
+      my $hash_order = ToString($$entry{namehash} || $$entry{fullhash});
+      $hash_order =~ s/^\s*//;
+      $hash_order =~ s/\s*$//;
+      my @author_keys = keys %$authors;
+      # avoid infinite loops if we have bugs, generally it's a prefix code
+    HASH_LOOP: while (@author_keys) {
+        for my $key (@author_keys) {
+          if ($hash_order =~ s/^$key//) {
+            push(@author_names, $$authors{$key});
+            @author_keys = grep { $_ ne $key } @author_keys;
+            next HASH_LOOP; } }
+        last; } }
+    # Put all authors together.
+    for my $author_name (@author_names) {
       $author_index += 1;
       if (@authors_tokens) {
         if ($author_index < $author_count) {
           push(@authors_tokens, T_OTHER(','), T_SPACE); }
         else {
           push(@authors_tokens, T_SPACE, T_OTHER('and'), T_SPACE); } }
-      push(@authors_tokens, ExplodeText($$authors{$author_key})); }
+      push(@authors_tokens, ExplodeText($author_name)); }
     push @$variant, @authors_tokens;
+    # Add all other metadata fields that may be relevant.
     push @$variant, (T_CS('\newblock'), T_OTHER('`'), T_OTHER('`'), $$entry{title}, T_OTHER("'"), T_OTHER("'")) if $$entry{title};
+    push @$variant, (T_SPACE, $$entry{note}) if $$entry{note};
     push @$variant, (T_CS('\newblock'), T_OTHER("In"), T_SPACE, T_CS('\emph'), T_BEGIN, $$entry{booktitle}, T_END) if $$entry{booktitle};
-    push @$variant, (T_OTHER(','), T_SPACE, $$entry{series}) if $$entry{series};
-    push @$variant, (T_CS('\newblock'), $$entry{publisher})  if $$entry{publisher};
-    push @$variant, (T_OTHER(','), T_SPACE, $$entry{year})   if $$entry{year};
+    if ($$entry{journaltitle}) {
+      push @$variant, (T_CS('\newblock'), T_CS('\emph'), T_BEGIN, $$entry{journaltitle}, T_END);
+      push @$variant, (T_SPACE, T_CS('\textbf'), T_BEGIN, $$entry{volume}, T_END) if $$entry{volume}; }
+    if ($$entry{series}) {
+      push @$variant, (T_OTHER(','), T_SPACE, $$entry{series});
+      push @$variant, (T_SPACE, $$entry{number}) if $$entry{number}; }
+    if ($$entry{publisher}) {
+      push @$variant, T_CS('\newblock');
+      push(@$variant, $$entry{location}, T_OTHER(":"), T_SPACE) if $$entry{location};
+      push @$variant, $$entry{publisher}; }
+    push @$variant, (T_OTHER(','), T_SPACE, $$entry{year}) if $$entry{year};
     push @$variant, (T_OTHER(','), T_SPACE, T_OTHER('pp.'), T_SPACE, $$entry{pages}) if $$entry{pages};
-    push @$variant, (T_CS('\newblock'), T_OTHER("URL:"), T_SPACE, T_CS('\url'), T_BEGIN, $$entry{url}, T_END) if $$entry{url};
-
+    if ($$entry{doi}) {
+      my @doi = $$entry{doi}->unlist;
+      # drop leading spaces for cleaner URI
+      while ($doi[0] && $doi[0]->getCatcode eq CC_SPACE) {
+        shift(@doi); }
+      push @$variant, (T_CS('\newblock'), T_OTHER("DOI:"), T_SPACE,
+        T_CS('\href'), T_BEGIN, T_OTHER("https://dx.doi.org/"), @doi, T_END, T_BEGIN, @doi, T_END); }
+    elsif ($$entry{url}) {
+      my $eprint_type = $$entry{eprinttype} ? T_OTHER(uc(ToString($$entry{eprinttype}))) : '';
+      $eprint_type = T_OTHER("URL") unless $eprint_type;
+      push @$variant, (T_CS('\newblock'), $eprint_type, T_OTHER(":"), T_SPACE, T_CS('\url'), T_BEGIN, $$entry{url}, T_END); }
     AssignValue('rebuilt_bibtex_variant', $variant, 'global');
     return ();
 }, locked => 1);
@@ -130,27 +188,44 @@ DefKeyVal('BiblatexAuthor', 'familyi', '');
 
 DefMacro('\name{}{}{}{}', sub {
     my ($gullet, $type, $count, $unk, $content) = @_;
-    # only handle authors for now;
-    return unless ToString($type) eq 'author';
-    my $author_count   = int(ToString($count));
-    my %authors        = ();
-    my @content_tokens = $content->unlist;
-    $gullet->unread(@content_tokens);
+    my $author_count = int(ToString($count));
+    my %authors      = ();
+    $gullet->unread($content->unlist);
     while ($author_count > 0) {
       $author_count--;
       my $author_arg = $gullet->readArg;
       $gullet->unread($author_arg->unlist);
       my $author_hash = $gullet->readArg;
-      # create a new set of Key-Value arguments
-      my $keyvals = LaTeXML::Core::KeyVals->new(undef, 'BiblatexAuthor', setInternals => 1);
-      # and read it from the gullet
-      $keyvals->readFrom($gullet, T_END);
+      # If we are given a hash, expect keyvals
       if (ToString($author_hash) =~ /^hash=(.+)$/) {
-        $authors{$1} = ToString(Expand($keyvals->getValue('given') || $keyvals->getValue('giveni')))
+        my $hash_value = $1;
+        my $keyvals    = LaTeXML::Core::KeyVals->new(undef, 'BiblatexAuthor', setInternals => 1);
+        $keyvals->readFrom($gullet, T_END);
+        $authors{$hash_value} = ToString(Digest(Expand($keyvals->getValue('given') || $keyvals->getValue('giveni'))))
           . ' '
-          . (ToString(Expand($keyvals->getValue('family') || $keyvals->getValue('familyi'))));
+          . (ToString(Digest(Expand($keyvals->getValue('family') || $keyvals->getValue('familyi')))));
         # and drop any remaining braces.
-        $authors{$1} =~ s/[}{]//g; } }
+        $authors{$hash_value} =~ s/[}{]//g; }
+
+      # if $author_hash is empty, expect pre-laid out arguments
+      else {
+        my $family   = $gullet->readArg();
+        my $familyi  = $gullet->readArg();
+        my $given    = $gullet->readArg();
+        my $giveni   = $gullet->readArg();
+        my $discard1 = $gullet->readArg();
+        my $discard2 = $gullet->readArg();
+        my $discard3 = $gullet->readArg();
+        my $discard4 = $gullet->readArg();
+        $family  = ref $family  ? ToString(Digest(Expand($family->unlist)))  : '';
+        $familyi = ref $familyi ? ToString(Digest(Expand($familyi->unlist))) : '';
+        $given   = ref $given   ? ToString(Digest(Expand($given->unlist)))   : '';
+        $giveni  = ref $giveni  ? ToString(Digest(Expand($giveni->unlist)))  : '';
+        # what should be the key? should we try to refetch the hash?
+        $authors{'names'} ||= [];
+        push @{ $authors{'names'} }, ($given . ' ' . $family);
+    } }
+
     # now that we have the authors, try to generate a sensible bibitem
     my $entry = LookupValue('biblatex_entry');
     $$entry{authors} = \%authors;
@@ -164,7 +239,6 @@ DefMacro('\list{}{}{}', sub {
     return; }, locked => 1);
 
 DefMacro('\AtEveryBibitem{}',   '');
-DefMacro('\printbibliography',  '');
 DefMacro('\keyw{}',             '');
 DefMacro('\bibinitdelim',       '');
 DefMacro('\bibinithyphendelim', '-');
@@ -181,7 +255,6 @@ DefPrimitive('\strng{}{}', sub {
     return;
 }, locked => 1);
 DefMacro('\range{}{}', '');
-DefEnvironment('{refsection}', '');
 
 sub init_verb {
   my ($gullet, $key) = @_;
@@ -206,7 +279,7 @@ DefPrimitive('\addbibresource{}', sub {
     PushValue('biblatex_resources', @file_list);
     return; }, locked => 1);
 
-DefMacro('\printbibliography', sub {
+DefMacro('\printbibliography[]', sub {
     my @resources = ();
     while (my $res = PopValue('biblatex_resources')) {
       push(@resources, T_OTHER(','), T_SPACE) if @resources;
@@ -217,5 +290,15 @@ DefMacro('\printbibliography', sub {
 DefPrimitive('\warn{}', sub {
     Info('biblatex', 'warn', ToString(Expand($_[1])));
     return; });
+
+#************************************************************************
+# language API : TODO?
+
+DefMacro('\DeclareLanguageMapping{}{}',      '');
+DefMacro('\DeclareLanguageMappingSuffix{}',  '');
+DefMacro('\DefineHyphenationExceptions{}{}', '');
+DefMacro('\DefineBibliographyExtras{}{}',    '');
+DefMacro('\UndefineBibliographyExtras{}{}',  '');
+DefMacro('\DefineBibliographyStrings{}{}',   '');
 
 1;
