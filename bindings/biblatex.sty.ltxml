@@ -15,6 +15,7 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
+RequirePackage('url');
 RequirePackage('natbib');
 #**********************************************************************
 
@@ -60,13 +61,17 @@ DefMacro('\bibnamedelimc',      '\addhighpenspace');
 DefMacro('\bibnamedelimd',      '\addlowpenspace');
 DefMacro('\bibnamedelimi',      '\addnbspace');
 
-DefMacro('\datalist[]{}', '');
-DefMacro('\enddatalist', sub {
-    return (
-      T_CS('\thebibliography'), T_BEGIN, T_OTHER(LookupValue('biblatex_entry_count')), T_END,
-      @{ LookupValue('rebuilt_bibtex_variant') || [] },
-      T_CS('\endthebibliography'));
-});
+DefMacro('\datalist[]{}', '', locked => 1);
+DefMacro('\sortlist[]{}', '', locked => 1);
+
+sub biblatex_as_thebibliography {
+  return (
+    T_CS('\thebibliography'), T_BEGIN, T_OTHER(LookupValue('biblatex_entry_count')), T_END,
+    @{ LookupValue('rebuilt_bibtex_variant') || [] },
+    T_CS('\endthebibliography')); }
+DefMacro('\enddatalist', \&biblatex_as_thebibliography, locked => 1);
+DefMacro('\endsortlist', \&biblatex_as_thebibliography, locked => 1);
+
 DefMacro('\entry{}{}{}', sub {
     AssignValue('biblatex_entry', {
         key => $_[1], type => $_[2] }, 'global');
@@ -112,6 +117,8 @@ DefMacro('\endentry', sub {
     push @$variant, (T_CS('\newblock'), $$entry{publisher})  if $$entry{publisher};
     push @$variant, (T_OTHER(','), T_SPACE, $$entry{year})   if $$entry{year};
     push @$variant, (T_OTHER(','), T_SPACE, T_OTHER('pp.'), T_SPACE, $$entry{pages}) if $$entry{pages};
+    push @$variant, (T_CS('\newblock'), T_OTHER("URL:"), T_SPACE, T_CS('\url'), T_BEGIN, $$entry{url}, T_END) if $$entry{url};
+
     AssignValue('rebuilt_bibtex_variant', $variant, 'global');
     return ();
 }, locked => 1);
@@ -175,7 +182,23 @@ DefPrimitive('\strng{}{}', sub {
 }, locked => 1);
 DefMacro('\range{}{}', '');
 DefEnvironment('{refsection}', '');
-DefEnvironment('{verb}',       '');
+
+sub init_verb {
+  my ($gullet, $key) = @_;
+  AssignValue('biblatex_verb_key', ToString($key), 'global');
+  DefMacro('\verb', sub {
+      PushValue('biblatex_verb_content', Explode($gullet->readRawLine())); });
+  return (); }
+DefMacro('\verb{}', \&init_verb);
+DefMacro('\endverb', sub {
+    my $entry        = LookupValue('biblatex_entry');
+    my @verb_content = ();
+    while (my $saved_content = PopValue('biblatex_verb_content')) {
+      unshift(@verb_content, $saved_content); }
+    $$entry{ LookupValue('biblatex_verb_key') } = Tokens(@verb_content);
+    DefMacro('\verb{}', \&init_verb);
+    return ();
+}, locked => 1);
 #**********************************************************************
 
 DefPrimitive('\addbibresource{}', sub {
@@ -190,5 +213,9 @@ DefMacro('\printbibliography', sub {
       push(@resources, T_OTHER($res)); }
     return (T_CS('\bibliography'), T_BEGIN, @resources, T_END);
 }, locked => 1);
+
+DefPrimitive('\warn{}', sub {
+    Info('biblatex', 'warn', ToString(Expand($_[1])));
+    return; });
 
 1;
