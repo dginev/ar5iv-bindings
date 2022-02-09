@@ -116,7 +116,7 @@ DefMacro('\endentry', sub {
     my $entry = LookupValue('biblatex_entry') || {};
     # reset entry just in case
     AssignValue('biblatex_entry', undef, 'global');
-    my $label = $$entry{'labelalpha'};
+    my $label = ToString(Digest(Expand($$entry{'labelalpha'})));
     # let's say we can not yet find the right label,
     # as the biblatex support here is minimal.
     # Rather than failing loudly, let's make a simple default one.
@@ -124,13 +124,21 @@ DefMacro('\endentry', sub {
       my $label_int = 1 + (LookupValue('biblatex_auto_label') || 0);
       AssignValue('biblatex_auto_label', $label_int, 'global');
       $label = T_OTHER("$label_int"); }
-
+    else {
+      my $unique_labels = LookupValue('biblatex_author_labels') || {};
+      if ($$unique_labels{$label}) {
+        my $suffix = 'a';
+        while ($$unique_labels{ $label . $suffix }) {
+          $suffix = chr(ord($suffix) + 1); }
+        $label = $label . $suffix; }
+      $$unique_labels{$label} = 1;
+      AssignValue('biblatex_author_labels', $unique_labels, 'global'); }
     # record this for {thebibliography}
     AssignValue('biblatex_entry_count', 1 + (LookupValue('biblatex_entry_count') || 0), 'global');
 
     my $variant = LookupValue('rebuilt_bibtex_variant') || [];
     push @$variant, (
-      T_CS('\bibitem'), T_OTHER('['), $label, T_OTHER(']'), T_BEGIN, $$entry{key}, T_END);
+      T_CS('\bibitem'), T_OTHER('['), T_OTHER($label), T_OTHER(']'), T_BEGIN, $$entry{key}, T_END);
     my $authors = $$entry{authors};
     # Two cases: either we have a DB-like hash,
     # or they were pre-typeset in "names"
@@ -200,6 +208,20 @@ DefMacro('\endentry', sub {
       my $eprint_type = $$entry{eprinttype} ? T_OTHER(uc(ToString($$entry{eprinttype}))) : '';
       $eprint_type = T_OTHER("URL") unless $eprint_type;
       push @$variant, (T_CS('\newblock'), $eprint_type, T_OTHER(":"), T_SPACE, T_CS('\url'), T_BEGIN, $$entry{url}, T_END); }
+    elsif ($$entry{eprint}) {
+      my $eprint_type_str = $$entry{eprinttype} ? uc(ToString($$entry{eprinttype})) : '';
+      $eprint_type_str = "URL" unless $eprint_type_str;
+      my @target = ($$entry{eprint});
+      if ($eprint_type_str eq 'ARXIV') {
+        $eprint_type_str = "arXiv";
+        # drop leading spaces for cleaner URI
+        my @eprint = $$entry{eprint}->unlist;
+        while ($eprint[0] && ($eprint[0]->getCatcode == CC_SPACE or Equals($eprint[0], T_OTHER('{')))) {
+          shift(@eprint); }
+        while ($eprint[-1] && ($eprint[-1]->getCatcode == CC_SPACE or Equals($eprint[-1], T_OTHER('}')))) {
+          pop(@eprint); }
+        @target = (T_CS('\href'), T_BEGIN, T_OTHER("https://arxiv.org/abs/"), @eprint, T_END, T_BEGIN, @eprint, T_END); }
+      push @$variant, (T_CS('\newblock'), T_OTHER("$eprint_type_str:"), @target); }
     AssignValue('rebuilt_bibtex_variant', $variant, 'global');
     return ();
 }, locked => 1);
