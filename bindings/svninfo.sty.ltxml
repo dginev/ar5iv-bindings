@@ -1,0 +1,52 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# | svninfo.sty                                                         | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#======================================================================
+RequirePackage('ifthen');
+# No effect from scrpage2.sty
+RequirePackage('eso-pic');
+RequirePackage('fancyheadings');
+# No effect from fancyhdr.sty
+#  /--------------------------------------------------------------------\
+# | INCOMPLETE IMPLEMENTATION                                           |
+# | just a no-op stub avoiding pointless errors,                        |
+# | feel invited to contribute upgrades!                                |
+#  \--------------------------------------------------------------------/
+DefMacro('\svnInfo SkipSpaces Match:$ Until:$',    Tokens());
+DefMacro('\svnKeyword SkipSpaces Match:$ Until:$', Tokens());
+DefMacro('\svnId',                                 Tokens());
+DefMacro('\svnInfoDate',                           Tokens());
+DefMacro('\svnInfoDay',                            Tokens());
+DefMacro('\svnInfoFile',                           Tokens());
+DefMacro('\svnInfoHeadURL',                        Tokens());
+DefMacro('\svnInfoLongDate',                       Tokens());
+DefMacro('\svnInfoMaxDay',                         Tokens());
+DefMacro('\svnInfoMaxMonth',                       Tokens());
+DefMacro('\svnInfoMaxRevision',                    Tokens());
+DefMacro('\svnInfoMaxToday',                       Tokens());
+DefMacro('\svnInfoMaxYear',                        Tokens());
+DefMacro('\svnInfoMinRevision',                    Tokens());
+DefMacro('\svnInfoMonth',                          Tokens());
+DefMacro('\svnInfoOwner',                          Tokens());
+DefMacro('\svnInfoRevision',                       Tokens());
+DefMacro('\svnInfoTime',                           Tokens());
+DefMacro('\svnInfoYear',                           Tokens());
+DefMacro('\svnKeywordempty',                       '\relax');
+DefMacro('\svnMaxToday',                           Tokens());
+DefMacro('\svnToday',                              Tokens());
+#======================================================================
+1;

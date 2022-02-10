@@ -1,0 +1,47 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# | eso-pic.sty                                                         | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#======================================================================
+RequirePackage('color');
+RequirePackage('keyval');
+RequirePackage('xcolor');
+#RequirePackage('eepic');
+#  /--------------------------------------------------------------------\
+# | INCOMPLETE IMPLEMENTATION                                           |
+# | just a stub ignoring the functionality for now                      |
+# | feel invited to contribute upgrades!                                |
+#  \--------------------------------------------------------------------/
+DefMacro('\AddToShipoutPicture OptionalMatch:* {}',   Tokens());
+DefMacro('\AddToShipoutPictureBG OptionalMatch:* {}', Tokens());
+DefMacro('\AddToShipoutPictureFG OptionalMatch:* {}', Tokens());
+DefMacro('\AtPageCenter OptionalMatch:* {}',          Tokens());
+DefMacro('\AtPageLowerLeft OptionalMatch:* {}',       Tokens());
+DefMacro('\AtPageUpperLeft OptionalMatch:* {}',       Tokens());
+DefMacro('\AtStockCenter OptionalMatch:* {}',         Tokens());
+DefMacro('\AtStockLowerLeft OptionalMatch:* {}',      Tokens());
+DefMacro('\AtStockUpperLeft OptionalMatch:* {}',      Tokens());
+DefMacro('\AtTextCenter OptionalMatch:* {}',          Tokens());
+DefMacro('\AtTextLowerLeft OptionalMatch:* {}',       Tokens());
+DefMacro('\AtTextUpperLeft OptionalMatch:* {}',       Tokens());
+DefMacro('\ClearShipoutPicture',                      Tokens());
+DefMacro('\ClearShipoutPictureBG',                    Tokens());
+DefMacro('\ClearShipoutPictureFG',                    Tokens());
+DefMacro('\LenToUnit{}',                              '#1');
+DefMacro('\ProcessOptionsWithKV{}',                   Tokens());
+DefMacro('\gridSetup[]{}{}{}{}{}',                    Tokens());
+#======================================================================
+1;
