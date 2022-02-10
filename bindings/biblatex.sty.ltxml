@@ -64,6 +64,7 @@ DefRegister('\c@highnamepenalty' => Number(0));
 
 DefMacro('\addslash', '/\hskip\z@skip');
 DefMacro('\adddot',   '.');
+DefMacro('\addcomma', ',');
 
 # ?
 DefMacro('\addspace',        '\space');
@@ -137,7 +138,13 @@ DefMacro('\endentry', sub {
       if ($$unique_labels{$label}) {
         my $suffix = 'a';
         while ($$unique_labels{ $label . $suffix }) {
-          $suffix = chr(ord($suffix) + 1); }
+          # We'll never have more than 26 collisions surely? Wrong!
+          # See arXiv:1212.4446 for an excellent regression test.
+          if ($suffix eq 'z') {
+            $label .= 'a';
+            $suffix = 'a'; }
+          else {
+            $suffix = chr(ord($suffix) + 1); } }
         $label = $label . $suffix; }
       $$unique_labels{$label} = 1;
       AssignValue('biblatex_author_labels', $unique_labels, 'global'); }
@@ -193,10 +200,11 @@ DefMacro('\endentry', sub {
     elsif ($$entry{journaltitle}) {
       push @$variant, (T_CS('\newblock'), T_OTHER("In"), T_SPACE, T_CS('\emph'), T_BEGIN, $$entry{journaltitle}, T_END); }
     if ($$entry{volume} && ($$entry{booktitle} || $$entry{journaltitle} || $$entry{series})) {
-      push @$variant, (T_SPACE, T_CS('\textbf'), T_BEGIN, $$entry{volume}, T_END); }
+      my @number = $$entry{number} ? (T_OTHER('.'), $$entry{number}) : ();
+      push @$variant, (T_SPACE, T_CS('\textbf'), T_BEGIN, $$entry{volume}, @number, T_END); }
     if ($$entry{series}) {
       push @$variant, (T_OTHER(','), T_SPACE, $$entry{series});
-      push @$variant, (T_SPACE, $$entry{number}) if $$entry{number}; }
+      push @$variant, (T_SPACE, $$entry{number}) if $$entry{number} && !$$entry{volume}; }
     if ($$entry{publisher}) {
       push @$variant, T_CS('\newblock');
       push(@$variant, $$entry{location}, T_OTHER(":"), T_SPACE) if $$entry{location};
@@ -215,9 +223,10 @@ DefMacro('\endentry', sub {
       push @$variant, (T_CS('\newblock'), T_OTHER("DOI:"), T_SPACE,
         T_CS('\href'), T_BEGIN, T_OTHER("https://dx.doi.org/"), @doi, T_END, T_BEGIN, @doi, T_END); }
     elsif ($$entry{url}) {
-      my $eprint_type = $$entry{eprinttype} ? T_OTHER(uc(ToString($$entry{eprinttype}))) : '';
-      $eprint_type = T_OTHER("URL") unless $eprint_type;
-      push @$variant, (T_CS('\newblock'), $eprint_type, T_OTHER(":"), T_SPACE, T_CS('\url'), T_BEGIN, $$entry{url}, T_END); }
+      my $eprint_type = $$entry{eprinttype} ? uc(ToString($$entry{eprinttype})) : '';
+      $eprint_type = "URL" unless $eprint_type;
+      $eprint_type = "arXiv" if $eprint_type eq 'ARXIV';
+      push @$variant, (T_CS('\newblock'), T_OTHER($eprint_type), T_OTHER(":"), T_SPACE, T_CS('\url'), T_BEGIN, $$entry{url}, T_END); }
     elsif ($$entry{eprint}) {
       my $eprint_type_str = $$entry{eprinttype} ? uc(ToString($$entry{eprinttype})) : '';
       $eprint_type_str = "URL" unless $eprint_type_str;
@@ -308,8 +317,8 @@ DefMacro('\AtEveryBibitem{}',   '');
 DefMacro('\keyw{}',             '');
 DefMacro('\bibinitdelim',       '');
 DefMacro('\bibinithyphendelim', '-');
-DefMacro('\bibrangedash',       '-');
-DefMacro('\bibnamedelimi',      ' ');
+DefMacroI('\bibrangedash', undef, T_OTHER("\x{2013}"));
+DefMacro('\bibnamedelimi', ' ');
 DefPrimitive('\field{}{}', sub {
     my $entry = LookupValue('biblatex_entry');
     $$entry{ ToString($_[1]) } = Expand($_[2]);
@@ -329,7 +338,18 @@ sub init_verb {
   my ($gullet, $key) = @_;
   AssignValue('biblatex_verb_key', ToString($key), 'global');
   DefMacro('\verb', sub {
-      PushValue('biblatex_verb_content', Explode($gullet->readRawLine())); });
+      my @raw_tokens     = Explode($gullet->readRawLine());
+      my @escaped_tokens = ();
+      # avoid \#, \%, \& in the token stream, or they lead to malformed URLs
+      while (my $next = shift(@raw_tokens)) {
+        if ($$next[0] ne '\\') {
+          push(@escaped_tokens, $next); }
+        else {
+          if ($raw_tokens[0] && ($raw_tokens[0][0] =~ /^[#&%\\]$/)) {
+            push(@escaped_tokens, shift(@raw_tokens)); }
+          else {
+            push(@escaped_tokens, $next); } } }
+      PushValue('biblatex_verb_content', @escaped_tokens); });
   return (); }
 DefMacro('\verb{}', \&init_verb);
 DefMacro('\endverb', sub {
@@ -592,4 +612,27 @@ DefMacro('\theliststart',       Tokens());
 DefMacro('\theliststop',        Tokens());
 DefMacro('\thelisttotal',       Tokens());
 
+DefMacro('\printtext[]{}',                  Tokens());
+DefMacro('\printfield[]{}',                 Tokens());
+DefMacro('\printlist[][]{}',                Tokens());
+DefMacro('\printnames[][]{}',               Tokens());
+DefMacro('\printtime',                      Tokens());
+DefMacro('\printdate',                      Tokens());
+DefMacro('\printdateextra',                 Tokens());
+DefMacro('\printlabeldate',                 Tokens());
+DefMacro('\printlabeldateextra',            Tokens());
+DefMacro('\printfile[]{}',                  Tokens());
+DefMacro('\indexfield[]{}',                 Tokens());
+DefMacro('\indexlist[][]{}',                Tokens());
+DefMacro('\indexnames[][]{}',               Tokens());
+DefMacro('\entrydata OptionalMatch:* {}{}', Tokens());
+DefMacro('\entryset{}{}',                   Tokens());
+DefMacro('\setunit OptionalMatch:* {}',     Tokens());
+
+DefMacro('\mkbibendnote{}',     Tokens());
+DefMacro('\mkbibendnotetext{}', Tokens());
+DefMacro('\mkbibfootnote',      '\footnote');
+DefMacro('\mkbibfootnotetext',  '\footnotetext');
+DefMacro('\pagenote{}',         Tokens());
+DefMacro('\pagenotetext{}',     Tokens());
 1;
