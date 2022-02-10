@@ -54,6 +54,7 @@ DefMacro('\Textcite',                                  '\cite');
 DefMacro('\supercite',                                 '\cite');
 DefMacro('\citeauthor',                                '\cite');
 
+# TODO: These require custom parsing code, deferred.
 #DefMacro('\parencites[]{}[][]{}[][]{}','');
 #DefMacro('\cites[]{}[][]{}[][]{}','');
 
@@ -62,9 +63,10 @@ DefMacro('\blx@imc@resetpunctfont', '\relax');     # ?
 DefMacro('\blx@postpunct',          '\@empty');    # ?
 DefRegister('\c@highnamepenalty' => Number(0));
 
-DefMacro('\addslash', '/\hskip\z@skip');
-DefMacro('\adddot',   '.');
-DefMacro('\addcomma', ',');
+DefMacro('\addslash',  '/\hskip\z@skip');
+DefMacro('\adddot',    '.');
+DefMacro('\addcomma',  ',');
+DefMacro('\autocap{}', '#1');
 
 # ?
 DefMacro('\addspace',        '\space');
@@ -104,9 +106,9 @@ sub biblatex_as_thebibliography {
     AssignValue('rebuilt_bibtex_variant', [], 'global');
     my $entry_count = LookupValue('biblatex_entry_count');
     AssignValue('biblatex_entry_count', 0, 'global');
-    my $preamble = LookupValue('bibtex_preamble');
+    my $preamble = LookupValue('biblatex_preamble');
     my @preamble = $preamble ? $preamble->unlist : ();
-    return (@preamble, T_CS('\thebibliography'), T_BEGIN, T_OTHER($entry_count), T_END, @rebuilt_variant, T_CS('\endthebibliography')); }
+    return (T_CS('\thebibliography'), T_BEGIN, @preamble, T_OTHER($entry_count), T_END, @rebuilt_variant, T_CS('\endthebibliography')); }
   else {
     return (); } }
 
@@ -174,21 +176,24 @@ DefMacro('\endentry', sub {
             next HASH_LOOP; } }
         last; } }
     # Put all authors together.
-    my $author_count   = scalar(@author_names);
+    my $author_count = scalar(@author_names);
+    # special case: long lists use "et al."
+    # TODO: this is configurable via a package option, upgrade when possible.
+    my $etal_limit     = 4;
+    my $etal_flag      = ($author_count > $etal_limit);
+    my $author_index   = 0;
     my @authors_tokens = ();
-    if (scalar(@author_names) < 4) {
-      my $author_index = 0;
-      for my $author_name (@author_names) {
-        $author_index += 1;
-        if (@authors_tokens) {
-          if ($author_index < $author_count) {
-            push(@authors_tokens, T_OTHER(','), T_SPACE); }
-          else {
-            push(@authors_tokens, T_SPACE, T_OTHER('and'), T_SPACE); } }
-        push(@authors_tokens, ExplodeText($author_name)); } }
-    else {    # special case: long lists use "et al."
-              # TODO: this is configurable via a package option, upgrade when possible.
-      @authors_tokens = ExplodeText($author_names[0] . " et al."); }
+    for my $author_name (@author_names) {
+      $author_index += 1;
+      last if $etal_flag && $author_index > 1;
+      if (@authors_tokens) {
+        if ($etal_flag || ($author_index < $author_count)) {
+          push(@authors_tokens, T_OTHER(','), T_SPACE); }
+        else {
+          push(@authors_tokens, T_SPACE, T_OTHER('and'), T_SPACE); } }
+      push(@authors_tokens, ExplodeText($author_name)); }
+    push(@authors_tokens, ExplodeText(" et al.")) if $etal_flag;
+
     push @$variant, @authors_tokens;
     # Add all other metadata fields that may be relevant.
     if ($$entry{title}) {
@@ -229,7 +234,9 @@ DefMacro('\endentry', sub {
       push @$variant, (T_CS('\newblock'), T_OTHER($eprint_type), T_OTHER(":"), T_SPACE, T_CS('\url'), T_BEGIN, $$entry{url}, T_END); }
     elsif ($$entry{eprint}) {
       my $eprint_type_str = $$entry{eprinttype} ? uc(ToString($$entry{eprinttype})) : '';
-      $eprint_type_str = "URL" unless $eprint_type_str;
+      $eprint_type_str = "eprint" unless $eprint_type_str;
+      my @eprint_class = $$entry{eprintclass} ? (T_SPACE, T_OTHER('['), $$entry{eprintclass}, T_OTHER(']')) : ();
+
       my @target = ($$entry{eprint});
       if ($eprint_type_str eq 'ARXIV') {
         $eprint_type_str = "arXiv";
@@ -239,7 +246,7 @@ DefMacro('\endentry', sub {
           shift(@eprint); }
         while ($eprint[-1] && ($eprint[-1]->getCatcode == CC_SPACE or Equals($eprint[-1], T_OTHER('}')))) {
           pop(@eprint); }
-        @target = (T_CS('\href'), T_BEGIN, T_OTHER("https://arxiv.org/abs/"), @eprint, T_END, T_BEGIN, @eprint, T_END); }
+        @target = (T_CS('\href'), T_BEGIN, T_OTHER("https://arxiv.org/abs/"), @eprint, T_END, T_BEGIN, @eprint, @eprint_class, T_END); }
       push @$variant, (T_CS('\newblock'), T_OTHER("$eprint_type_str:"), @target); }
     AssignValue('rebuilt_bibtex_variant', $variant, 'global');
     return ();
@@ -263,6 +270,7 @@ DefMacro('\name{}{}{}{}', sub {
       my $author_hash = $gullet->readArg;
       # If we are given a hash, statrting with a capital letter,
       # expect keyvals. This is a fragile heuristic, in absence of a full parser.
+      # see 1703.01221 for an in-between case
       if (ToString($author_hash) =~ /^hash=([A-Z]\w+)$/) {
         my $hash_value = $1;
         my $keyvals    = LaTeXML::Core::KeyVals->new(undef, 'BiblatexAuthor', setInternals => 1);
@@ -321,18 +329,19 @@ DefMacroI('\bibrangedash', undef, T_OTHER("\x{2013}"));
 DefMacro('\bibnamedelimi', ' ');
 DefPrimitive('\field{}{}', sub {
     my $entry = LookupValue('biblatex_entry');
-    $$entry{ ToString($_[1]) } = Expand($_[2]);
+    $$entry{ ToString($_[1]) } = $_[2];
     return;
 }, locked => 1);
 DefPrimitive('\strng{}{}', sub {
     my $entry = LookupValue('biblatex_entry');
-    $$entry{ ToString($_[1]) } = Expand($_[2]);
-    return;
-}, locked => 1);
-DefMacro('\range{}{}', '');
-DefPrimitive('\preamble{}', sub {
-    AssignValue('biblatex_preamble', $_[1], 'global');
+    $$entry{ ToString($_[1]) } = $_[2];
     return; }, locked => 1);
+DefMacro('\range{}{}', '');
+# Both use the preamble right away,
+# and save it for possible later activation.
+DefMacro('\preamble{}', sub {
+    AssignValue('biblatex_preamble', $_[1], 'global');
+    return $_[1]; }, locked => 1);
 
 sub init_verb {
   my ($gullet, $key) = @_;
@@ -431,9 +440,14 @@ DefMacro('\UseNextMultiCiteHook',           Tokens());
 DefMacro('\UseVolciteHook',                 Tokens());
 DefMacro('\DeferNextCitekeyHook',           Tokens());
 
-DefMacro('\providebibmacro{}{}', Tokens());
-DefMacro('\renewbibmacro{}{}',   Tokens());
-DefMacro('\defbibheading{}[]{}', Tokens());
+DefMacro('\providebibmacro OptionalMatch:* {}{}', Tokens());
+DefMacro('\renewbibmacro OptionalMatch:* {}{}',   Tokens());
+DefMacro('\newbibmacro OptionalMatch:* {}[][]{}', Tokens());
+DefMacro('\restorebibmacro OptionalMatch:* {}',   Tokens());
+DefMacro('\savebibmacro OptionalMatch:* {}',      Tokens());
+DefMacro('\defbibheading OptionalMatch:* {}[]{}', Tokens());
+DefMacro('\restorecommand OptionalMatch:* {}',    Tokens());
+DefMacro('\savecommand OptionalMatch:* {}',       Tokens());
 
 DefRegister('\labelnumberwidth' => Glue(0, 0, 0));
 DefRegister('\labelalphawidth'  => Glue(0, 0, 0));
