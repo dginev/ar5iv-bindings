@@ -27,6 +27,18 @@ DefMacro('\eqn{}{}', sub {
     else {
       return (T_CS('\@@BEGINDISPLAYMATH'), $content->unlist, T_CS('\@@ENDDISPLAYMATH')); } });
 
+# TODO:
+# The ToC is bookkept internally as a plain TeX feature.
+# it may take some dedicated development to first recover the sectioning structure elements
+# at which point a simple a simple map into \tableofcontents would work.
+# as-is, the harvmac HTML is just paragraphs with bold snippets of text...
+# we should also bind \newsec and \subsec to proper structural XML
+DefMacroI('\listtoc',undef,Tokens(),locked=>1);
+DefMacroI('\writetoc',undef,sub {
+  Warn('expected','TOC',$_[0],'harvmac.tex.ltxml has not yet implemented Table-of-contents');
+  return Tokens(); },
+  locked=>1);
+
 #**********************************************************************
 
 1;
