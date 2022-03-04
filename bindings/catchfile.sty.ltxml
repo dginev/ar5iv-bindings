@@ -1,0 +1,31 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  catchfile.sty                                                      | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+DefMacro('\CatchFileDef DefToken {}{}', sub {
+  my $contents = Input($_[2]);
+  DefMacroI($_[1], undef, $contents);
+  return;
+});
+DefMacro('\CatchFileEdef DefToken {}{}', sub {
+  my $exp_contents = Expand(Input($_[2]));
+  DefMacroI($_[1], undef, $exp_contents);
+  return;
+});
+
+#**********************************************************************
+
+1;
