@@ -23,3 +23,5 @@ Warn('missing_file', 'xr.sty', $STATE->getStomach->getGullet,
 DefMacro('\externaldocument[]{}',Tokens());
 DefMacro('\externalcitedocument[]{}',Tokens());
 #**********************************************************************
+
+1;

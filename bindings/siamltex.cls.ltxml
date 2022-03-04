@@ -1,0 +1,40 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  siamltex.cls                                                       | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+
+LoadClass('OmniBus');
+
+sub classification_tokens_for_env {
+  my ($stomach, $whatsit, $type) = @_;
+  $stomach->getGullet()->unread(
+    T_CS('\@add@frontmatter'), T_BEGIN, ExplodeText('ltx:classification'), T_END,
+    T_OTHER('['), ExplodeText('scheme'),     T_OTHER('='), ExplodeText($type), T_OTHER(']'),
+    T_BEGIN,      Revert($whatsit->getBody), T_END);
+  return; }
+
+DefEnvironment('{AMS}', '', afterDigestBody => sub {
+    return classification_tokens_for_env($_[0], $_[1], 'AMS'); });
+DefEnvironment('{AM}', '', afterDigestBody => sub {
+    return classification_tokens_for_env($_[0], $_[1], 'AM'); });
+DefEnvironment('{PII}', '', afterDigestBody => sub {
+    return classification_tokens_for_env($_[0], $_[1], 'PII'); });
+
+DefMacroI(T_CS('\begin{romannum}'), undef, '\begin{enumerate}');
+DefMacroI(T_CS('\end{romannum}'),   undef, '\end{enumerate}');
+
+1;
