@@ -72,4 +72,11 @@ DefMacro('\PIIname',        'PII');
 DefMacro('\URL',            '\protect\\ \hspace*{15.37pt}http://www.siam.org/journals/');
 DefMacro('\sameauthor',     '\relax');
 
+DefMacro('\const','\mathop{\operator@font const}\nolimits');
+DefMacro('\diag','\mathop{\operator@font diag}\nolimits');
+DefMacro('\grad','\mathop{\operator@font grad}\nolimits');
+DefMacro('\Range','\mathop{\operator@font Range}\nolimits');
+DefMacro('\rank','\mathop{\operator@font rank}\nolimits');
+DefMacro('\supp','\mathop{\operator@font supp}\nolimits');
+
 1;
