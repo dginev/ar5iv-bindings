@@ -1,4 +1,4 @@
-% ****** Start of file aps10.sty ******
+% ****** Start of file aps12.sty ******
 %
 %
 %   This file is part of the APS files in the REVTeX 3.0 distribution.
@@ -8,116 +8,98 @@
 %
 %   See the REVTeX 3.0 README file for restrictions and more information.
 %
-\typeout{Filename: aps10.sty, v3.0 <2 October 1992>}
+\typeout{Filename: aps12.sty, v3.0 <2 October 1992>}
 
 \lineskip 1pt
 \normallineskip 1pt
-\def\baselinestretch{1}
 
-\def\@tempa{prl}
-\ifx\@journal\@tempa %
-\def\@normalsize{\@setsize\normalsize{12pt}\xpt\@xpt
+\edef\baselinestretch{\if@tightenlines1\else1.655\fi}
+
+\def\@normalsize{\@setsize\normalsize{14.5pt}\xiipt\@xiipt
+\abovedisplayskip 12\p@ plus3\p@ minus7\p@
+\belowdisplayskip \abovedisplayskip
+\abovedisplayshortskip  \z@ plus3\p@
+\belowdisplayshortskip  6.5\p@ plus3.5\p@ minus3\p@
+\let\@listi\@listI}
+
+\def\small{\@setsize\small{14.5pt}\xipt\@xipt
+\abovedisplayskip 11\p@ plus3\p@ minus6\p@
+\belowdisplayskip \abovedisplayskip
+\abovedisplayshortskip  \z@ plus3\p@
+\belowdisplayshortskip  6.5\p@ plus3.5\p@ minus3\p@
+\def\@listi{\leftmargin\leftmargini
+\parsep 4.5\p@ plus2\p@ minus\p@ \itemsep \parsep
+\topsep 9\p@ plus3\p@ minus5\p@}}
+
+\def\footnotesize{\@setsize\footnotesize{14.5pt}\xpt\@xpt
 \abovedisplayskip 10\p@ plus2\p@ minus5\p@
 \belowdisplayskip \abovedisplayskip
-\abovedisplayshortskip  \abovedisplayskip
-\belowdisplayshortskip \abovedisplayskip
-\let\@listi\@listI}
-\else
-\def\@normalsize{\@setsize\normalsize{11.5pt}\xpt\@xpt
-\abovedisplayskip 10\p@ plus2\p@ minus5\p@
-\belowdisplayskip \abovedisplayskip
-\abovedisplayshortskip  \abovedisplayskip
-\belowdisplayshortskip \abovedisplayskip
-\let\@listi\@listI}
-\fi
-
-\def\small{\@setsize\small{11pt}\ixpt\@ixpt
-\abovedisplayskip 8.5\p@ plus3\p@ minus4\p@
-\belowdisplayskip \abovedisplayskip
-\abovedisplayshortskip \z@ plus2\p@
-\belowdisplayshortskip 4\p@ plus2\p@ minus2\p@
+\abovedisplayshortskip  \z@ plus3\p@
+\belowdisplayshortskip  6\p@ plus3\p@ minus3\p@
 \def\@listi{\leftmargin\leftmargini
-\topsep 4\p@ plus2\p@ minus2\p@\parsep 2\p@ plus\p@ minus\p@
+\topsep 6\p@ plus2\p@ minus2\p@\parsep 3\p@ plus2\p@ minus\p@
 \itemsep \parsep}}
 
-\def\footnotesize{\@setsize\footnotesize{9.5pt}\viiipt\@viiipt
-\abovedisplayskip 6\p@ plus2\p@ minus4\p@
-\belowdisplayskip \abovedisplayskip
-\abovedisplayshortskip \z@ plus\p@
-\belowdisplayshortskip 3\p@ plus\p@ minus2\p@
-\def\@listi{\leftmargin\leftmargini
-\topsep 3\p@ plus\p@ minus\p@\parsep 2\p@ plus\p@ minus\p@
-\itemsep \parsep}}
-
-\def\scriptsize{\@setsize\scriptsize{8pt}\viipt\@viipt}
-\def\tiny{\@setsize\tiny{6pt}\vpt\@vpt}
-\def\large{\@setsize\large{14pt}\xiipt\@xiipt}
-\def\Large{\@setsize\Large{18pt}\xivpt\@xivpt}
-\def\LARGE{\@setsize\LARGE{22pt}\xviipt\@xviipt}
-\def\huge{\@setsize\huge{25pt}\xxpt\@xxpt}
-\def\Huge{\@setsize\Huge{30pt}\xxvpt\@xxvpt}
+\def\scriptsize{\@setsize\scriptsize{9.5pt}\viiipt\@viiipt}
+\def\tiny{\@setsize\tiny{7pt}\vipt\@vipt}
+\def\large{\@setsize\large{18pt}\xivpt\@xivpt}
+\def\Large{\@setsize\Large{22pt}\xviipt\@xviipt}
+\def\LARGE{\@setsize\LARGE{25pt}\xxpt\@xxpt}
+\def\huge{\@setsize\huge{30pt}\xxvpt\@xxvpt}
+\let\Huge=\huge
 
 \normalsize
 
 \if@twoside
-\oddsidemargin  -.4in
-\evensidemargin -.1in
-\marginparwidth 107pt
-\else
-\oddsidemargin  -.25in
+\oddsidemargin .25in
 \evensidemargin -.25in
-\marginparwidth 30pt
+\marginparwidth 60pt
+\else
+\oddsidemargin 0pt
+\evensidemargin 0pt
+\marginparwidth 44pt
 \fi
-\marginparsep 6pt
+\marginparsep 10pt
 
-\topmargin -61pt
+\topmargin -37pt
 
-\headheight 25pt
-\headsep 16pt
+\headheight 12pt
+\headsep 25pt
 
 \topskip 10pt
 
 \footskip 30pt
 
-\def\@tempa{prl}
-\ifx\@journal\@tempa %
-\textheight = 55\baselineskip
+\if@tightenlines
+\textheight = 44\baselineskip
 \else
-\textheight = 57\baselineskip
+\textheight = 27\baselineskip
 \fi
 \advance\textheight by \topskip
+\textwidth 468pt
+\displaywidth\textwidth %
+\linewidth\textwidth %
 
-\def\narrowtext{\par\global\columnwidth20.5pc
-\global\hsize\columnwidth\global\linewidth\columnwidth
-\global\displaywidth\columnwidth}
+\let\narrowtext=\relax
+\let\mediumtext=\relax
+\let\widetext=\relax
 
-\def\mediumtext{\par\global\columnwidth5.5in
-\global\hsize\columnwidth\global\linewidth\columnwidth
-\global\displaywidth\columnwidth}
-
-\def\widetext{\par\global\columnwidth42.5pc
-\global\hsize\columnwidth\global\linewidth\columnwidth
-\global\displaywidth\columnwidth}
-
-\textwidth42.5pc
-\widetext
-
-\columnsep 1.5pc
+\columnsep 10pt
 \columnseprule 0pt
 
-\footnotesep 9.25pt
-\skip\footins 39pt plus 4pt minus 2pt
-\def\footnoterule{\kern-19pt\hrule width.5in\kern18.6pt}
+\footnotesep 2pc
+\skip\footins 25.25pt plus 4pt minus 2pt
+\def\footnoterule{\kern-5.25pt\hrule width.5in\kern4.85pt}
 
-\floatsep 12pt plus 2pt minus 2pt
+\floatsep 14pt plus 2pt minus 4pt
 
 \textfloatsep 20pt plus 2pt minus 4pt
 
-\intextsep 12pt plus 2pt minus 2pt
+\intextsep 14pt plus 4pt minus 4pt
 
 \@maxsep 20pt
 
-\dblfloatsep 12pt plus 2pt minus 2pt
+\dblfloatsep 14pt plus 2pt minus 4pt
 
 \dbltextfloatsep 20pt plus 2pt minus 4pt
 
@@ -125,21 +107,21 @@
 
 \@fptop 0pt plus 1fil
 
-\@fpsep 8pt plus 2fil
+\@fpsep 10pt plus 2fil
 \@fpbot 0pt plus 1fil
 
 \@dblfptop 0pt plus 1fil
 
-\@dblfpsep 8pt plus 2fil
+\@dblfpsep 10pt plus 2fil%
 \@dblfpbot 0pt plus 1fil
 
-\marginparpush 5pt
+\marginparpush 7pt
 
 \parskip 0pt plus 1pt
 
-\parindent 1em
+\parindent 1.5em
 
-\partopsep 2pt plus 1pt minus 1pt
+\partopsep 3pt plus 2pt minus 2pt
 
 \@lowpenalty   51
 \@medpenalty  151
@@ -185,33 +167,33 @@
 0pt plus1fill minus1fill\relax}{}}
 }
 
-\leftmargini 25pt
-\leftmarginii 22pt
-\leftmarginiii 18.7pt
-\leftmarginiv 17pt
-\leftmarginv 10pt
-\leftmarginvi 10pt
+\leftmargini 2.5em
+\leftmarginii 2.2em
+\leftmarginiii 1.87em
+\leftmarginiv 1.7em
+\leftmarginv 1em
+\leftmarginvi 1em
 
 \leftmargin\leftmargini
-\labelsep 4pt
+\labelsep .5em
 \labelwidth\leftmargini\advance\labelwidth-\labelsep
 
-\def\@listI{\leftmargin\leftmargini \parsep 4\p@ plus2\p@ minus\p@
-\topsep 8\p@ plus2\p@ minus4\p@
-\itemsep 4\p@ plus2\p@ minus\p@}
+\def\@listI{\leftmargin\leftmargini \parsep 5\p@ plus2.5\p@ minus\p@
+\topsep 10\p@ plus4\p@ minus6\p@
+\itemsep 5\p@ plus2.5\p@ minus\p@}
 
 \let\@listi\@listI
 \@listi
 
 \def\@listii{\leftmargin\leftmarginii
 \labelwidth\leftmarginii\advance\labelwidth-\labelsep
-\topsep 4\p@ plus2\p@ minus\p@
-\parsep 2\p@ plus\p@ minus\p@
+\topsep 5\p@ plus2.5\p@ minus\p@
+\parsep 2.5\p@ plus\p@ minus\p@
 \itemsep \parsep}
 
 \def\@listiii{\leftmargin\leftmarginiii
 \labelwidth\leftmarginiii\advance\labelwidth-\labelsep
-\topsep 2\p@ plus\p@ minus\p@
+\topsep 2.5\p@ plus\p@ minus\p@
 \parsep \z@ \partopsep \p@ plus\z@ minus\p@
 \itemsep \topsep}
 
@@ -251,39 +233,40 @@
 \def\frak{\protect\pfrak} \def\Bbb{\protect\pBbb}
 
 \newfam\msamfam
-\font\twlmsam=msam10\@magscale1 \font\tenmsam=msam10 \font\ninmsam=msam9
-\font\sevmsam=msam7 \font\fivmsam=msam5
+\font\frtnmsam=msam10\@magscale2 \font\twlmsam=msam10\@magscale1
+\font\elvmsam=msam10\@halfmag \font\egtmsam=msam8 \font\sixmsam=msam6
 
 \newfam\msbmfam
-\font\twlmsbm=msbm10\@magscale1 \font\tenmsbm=msbm10 \font\ninmsbm=msbm9
-\font\sevmsbm=msbm7 \font\fivmsbm=msbm5
+\font\frtnmsbm=msbm10\@magscale2 \font\twlmsbm=msbm10\@magscale1
+\font\elvmsbm=msbm10\@halfmag \font\egtmsbm=msbm8 \font\sixmsbm=msbm6
 
 \newfam\euffam
-\font\twleufm=eufm10\@magscale1 \font\teneufm=eufm10 \font\nineufm=eufm9
-\font\seveufm=eufm7 \font\fiveufm=eufm5
+\font\frtneufm=eufm10\@magscale2 \font\twleufm=eufm10\@magscale1
+\font\elveufm=eufm10\@halfmag \font\egteufm=eufm8 \font\sixeufm=eufm6
 
-\def\fontextras#1{%
-\def\pfrak{\fam\euffam\nineufm}\textfont\euffam\nineufm
-\scriptfont\euffam\seveufm \scriptscriptfont\euffam\fiveufm
-\textfont\msamfam\ninmsam \scriptfont\msamfam\sevmsam
-\scriptscriptfont\msamfam\fivmsam
-\def\pBbb{\fam\msbmfam\ninmsbm}\textfont\msbmfam\ninmsbm
-\scriptfont\msbmfam\sevmsbm \scriptscriptfont\msbmfam\fivmsbm
-\def\boldmath{\@ifundefined{#1ninmib}%
-{\expandafter\global\expandafter\def\csname#1ninmib\endcsname{}%
-\global\font\ninmib=cmmib9\global\font\sevmib=cmmib7\global
-\font\fivmib=cmmib5%
-\global\font\ninbsy=cmbsy9\global\font\sevbsy=cmbsy7\global
-\font\fivbsy=cmbsy5%
-\global\font\nineufb=eufb9\global\font\seveufb=eufb7\global
-\font\fiveufb=eufb5\relax
+\def\fontextras#1#2#3{%
+\def\pfrak{\fam\euffam\elveufm}\textfont\euffam\elveufm
+\scriptfont\euffam\egteufm \scriptscriptfont\euffam\sixeufm
+\textfont\msamfam\elvmsam \scriptfont\msamfam\egtmsam
+\scriptscriptfont\msamfam\sixmsam
+\def\pBbb{\fam\msbmfam\elvmsbm}\textfont\msbmfam\elvmsbm
+\scriptfont\msbmfam\egtmsbm \scriptscriptfont\msbmfam\sixmsbm
+\def\boldmath{\@ifundefined{#1elvmib}%
+{\expandafter\global\expandafter\def\csname#1elvmib\endcsname{}%
+\global\font\elvmib=cmmib10\@halfmag\global\font\egtmib=cmmib8\global
+\font\sixmib=cmmib6%
+\global\font\elvbsy=cmbsy10\@halfmag\global\font\egtbsy=cmbsy8\global
+\font\sixbsy=cmbsy6%
+\global\font\elveufb=eufb10\@halfmag\global\font\egteufb=eufb8\global
+\font\sixeufb=eufb6\global\font#2=#3\relax
 \expandafter\@addfontinfo\csname#1\endcsname
 {\def\boldmath{\@prtct\@nomathbold
 \everymath{\mit}\everydisplay{\mit}%
-\textfont\@ne\ninmib \scriptfont\@ne\sevmib \scriptscriptfont\@ne\fivmib
-\textfont\tw@\ninbsy \scriptfont\tw@\sevbsy \scriptscriptfont\tw@\fivbsy
-\textfont\euffam\nineufb \scriptfont\euffam\seveufb
-\scriptscriptfont\euffam\fiveufb
+\textfont\@ne\elvmib \scriptfont\@ne\egtmib \scriptscriptfont\@ne\sixmib
+\textfont\tw@\elvbsy \scriptfont\tw@\egtbsy \scriptscriptfont\tw@\sixbsy
+\textfont\euffam\elveufb \scriptfont\euffam\egteufb
+\scriptscriptfont\euffam\sixeufb
+\textfont\lyfam#2\relax
 \@prtct\@boldtrue}%
 }%
 }%
@@ -291,65 +274,69 @@
 }%
 }
 
-\expandafter\def\expandafter\viiipt\expandafter{\viiipt \fontextras{@viiipt}}
-
-\expandafter\def\expandafter\ixpt\expandafter{\ixpt \fontextras{@ixpt}}
-
 \expandafter\def\expandafter\xpt\expandafter{\xpt%
-\def\pfrak{\fam\euffam\teneufm}\textfont\euffam\teneufm
-\scriptfont\euffam\seveufm \scriptscriptfont\euffam\fiveufm
-\textfont\msamfam\tenmsam \scriptfont\msamfam\sevmsam
-\scriptscriptfont\msamfam\fivmsam
-\def\pBbb{\fam\msbmfam\tenmsbm}\textfont\msbmfam\tenmsbm
-\scriptfont\msbmfam\sevmsbm \scriptscriptfont\msbmfam\fivmsbm
-\def\boldmath{\@ifundefined{tenmib}%
-{\global\font\tenmib=cmmib10\global\font\sevmib=cmmib7\global
-\font\fivmib=cmmib5%
-\global\font\tenbsy=cmbsy10\global\font\sevbsy=cmbsy7\global
-\font\fivbsy=cmbsy5%
-\global\font\teneufb=eufb10\global\font\seveufb=eufb7\global
-\font\fiveufb=eufb5
-\global\font\tenlyb=lasyb10\relax
-\@addfontinfo\@xpt{\def\boldmath{\@prtct\@nomathbold
-\everymath{\mit}\everydisplay{\mit}%
-\textfont\@ne\tenmib \scriptfont\@ne\sevmib \scriptscriptfont\@ne\fivmib
-\textfont\tw@\tenbsy \scriptfont\tw@\sevbsy \scriptscriptfont\tw@\fivbsy
-\textfont\euffam\teneufb \scriptfont\euffam\seveufb
-\scriptscriptfont\euffam\fiveufb
-\textfont\lyfam\tenlyb
-\@prtct\@boldtrue}%
-}%
-}%
-{}\@xpt\boldmath
-}%
+\fontextras{@xpt}\tenlyb{lasyb10}%
+}
+
+\expandafter\def\expandafter\xipt\expandafter{\xipt%
+\fontextras{@xipt}\elvlyb{lasyb10\@halfmag}%
 }
 
 \expandafter\def\expandafter\xiipt\expandafter{\xiipt%
 \def\pfrak{\fam\euffam\twleufm}\textfont\euffam\twleufm
-\scriptfont\euffam\nineufm \scriptscriptfont\euffam\seveufm
-\textfont\msamfam\twlmsam \scriptfont\msamfam\ninmsam
-\scriptscriptfont\msamfam\sevmsam
+\scriptfont\euffam\egteufm \scriptscriptfont\euffam\sixeufm
+\textfont\msamfam\twlmsam \scriptfont\msamfam\egtmsam
+\scriptscriptfont\msamfam\sixmsam
 \def\pBbb{\fam\msbmfam\twlmsbm}\textfont\msbmfam\twlmsbm
-\scriptfont\msbmfam\ninmsbm \scriptscriptfont\msbmfam\sevmsbm
+\scriptfont\msbmfam\egtmsbm \scriptscriptfont\msbmfam\sixmsbm
 \def\boldmath{\@ifundefined{twlmib}%
-{\global\font\twlmib=cmmib10\@magscale1\global\font\ninmib=cmmib9\global
-\font\sevmib=cmmib7%
-\global\font\twlbsy=cmbsy10\@magscale1\global\font\ninbsy=cmbsy9\global
-\font\sevbsy=cmbsy7%
-\global\font\twleufb=eufb10\@magscale1\global\font\nineufb=eufb9\global
-\font\seveufb=eufb7
+{\global\font\twlmib=cmmib10\@magscale1\global\font\egtmib=cmmib8\global
+\font\sixmib=cmmib6%
+\global\font\twlbsy=cmbsy10\@magscale1\global\font\egtbsy=cmbsy8\global
+\font\sixbsy=cmbsy6%
+\global\font\twleufb=eufb10\@magscale1\global\font\egteufb=eufb8\global
+\font\sixeufb=eufb6
 \global\font\twllyb=lasyb10\@magscale1\relax
 \@addfontinfo\@xiipt{\def\boldmath{\@prtct\@nomathbold
 \everymath{\mit}\everydisplay{\mit}%
-\textfont\@ne\twlmib \scriptfont\@ne\ninmib \scriptscriptfont\@ne\sevmib
-\textfont\tw@\twlbsy \scriptfont\tw@\ninbsy \scriptscriptfont\tw@\sevbsy
-\textfont\euffam\twleufb \scriptfont\euffam\nineufb
-\scriptscriptfont\euffam\seveufb
+\textfont\@ne\twlmib \scriptfont\@ne\egtmib \scriptscriptfont\@ne\sixmib
+\textfont\tw@\twlbsy \scriptfont\tw@\egtbsy \scriptscriptfont\tw@\sixbsy
+\textfont\euffam\twleufb \scriptfont\euffam\egteufb
+\scriptscriptfont\euffam\sixeufb
 \textfont\lyfam\twllyb
 \@prtct\@boldtrue}%
 }%
 }%
 {}\@xiipt\boldmath
+}%
+}
+
+\expandafter\def\expandafter\xivpt\expandafter{\xivpt%
+\def\pfrak{\fam\euffam\frtneufm}\textfont\euffam\frtneufm
+\scriptfont\euffam\elveufm \scriptscriptfont\euffam\egteufm
+\textfont\msamfam\frtnmsam \scriptfont\msamfam\elvmsam
+\scriptscriptfont\msamfam\egtmsam
+\def\pBbb{\fam\msbmfam\frtnmsbm}\textfont\msbmfam\frtnmsbm
+\scriptfont\msbmfam\elvmsbm \scriptscriptfont\msbmfam\egtmsbm
+\def\boldmath{\@ifundefined{frtnmib}%
+{\global\font\frtnmib=cmmib10\@magscale2\global\font\elvmib=cmmib10\@halfmag
+\global\font\egtmib=cmmib8%
+\global\font\frtnbsy=cmbsy10\@magscale2\global\font\elvbsy=cmbsy10\@halfmag
+\global\font\egtbsy=cmbsy8%
+\global\font\frtneufb=eufb10\@magscale2\global\font\elveufb=eufb10\@halfmag
+\global\font\egteufb=eufb8
+\global\font\frtnlyb=lasyb10\@magscale2\relax
+\@addfontinfo\@xivpt{\def\boldmath{\@prtct\@nomathbold
+\everymath{\mit}\everydisplay{\mit}%
+\textfont\@ne\frtnmib \scriptfont\@ne\elvmib \scriptscriptfont\@ne\egtmib
+\textfont\tw@\frtnbsy \scriptfont\tw@\elvbsy \scriptscriptfont\tw@\egtbsy
+\textfont\euffam\frtneufb \scriptfont\euffam\elveufb
+\scriptscriptfont\euffam\egteufb
+\textfont\lyfam\frtnlyb
+\@prtct\@boldtrue}%
+}%
+}%
+{}\@xivpt\boldmath
 }%
 }
 
@@ -369,7 +356,7 @@
 \def\urcorner{\delimiter"5\msafam@71\msafam@71 }
 \def\llcorner{\delimiter"4\msafam@78\msafam@78 }
 \def\lrcorner{\delimiter"5\msafam@79\msafam@79 }
-\def\yen{{\mathhexbox\msafam@55 }}
+\def\yen{{\mathhexbox@\msafam@55 }}
 \def\checkmark{{\mathhexbox\msafam@58 }}
 \def\circledR{{\mathhexbox\msafam@72 }}
 \def\maltese{{\mathhexbox\msafam@7A }}
@@ -403,5 +390,5 @@
 \endinput
 
 %
-% ****** End of file aps10.sty ******
+% ****** End of file aps12.sty ******
 

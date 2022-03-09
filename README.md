@@ -17,3 +17,11 @@ Excluded files that are:
 For all intents and purposes, the bindings in this repository are highly *experimental*.
 
 As support stabilizes and matures, bindings of sufficient quality will swim up to the mainline LaTeXML "Package" support, and will be removed from this repository.
+
+### Note on Licensing
+
+All files under `bindings/` are released in the public domain and you are invited to reuse them.
+
+All other assets currently in the repository come from the wider LaTeX publishing ecosystem, and are distributable under their own licenses.
+
+Ideally, avoid using this repository in any way that relies on raw `.sty` or `.cls` assets. Only the `.ltxml` files are ours to fully distribute.
