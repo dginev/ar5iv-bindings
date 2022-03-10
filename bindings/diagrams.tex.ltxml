@@ -17,10 +17,32 @@ use LaTeXML::Package;
 
 #**********************************************************************
 
-InputDefinitions('diagrams', type => 'tex', noltxml => 1);
+Warn('missing_file', 'diagrams.tex', $STATE->getStomach->getGullet, 'diagrams.tex is not implemented and will not be interpreted raw.');
+#InputDefinitions('diagrams', type => 'tex', noltxml => 1);
 
+our %discarded_env_error_report = ();
 # see arXiv:math/0002180 for an ambitious use.
-DefEnvironment('{diagram}', 'diagram.tex is currently unsupported', locked => 1);
+sub discard_env_body {
+  my ($stomach, $kind) = @_;
+  my $gullet = $stomach->getGullet;
+  $stomach->bgroup;
+  if (!$discarded_env_error_report{$kind}) {
+    $discarded_env_error_report{$kind} = 1;
+    Error('undefined', '{' . $kind . '}', $gullet,
+      $kind . ' has no support in diagrams.tex.ltxml, this is a stub binding.'); }
+  # discard contents;
+  while (my $upto_end = $gullet->readUntil(T_CS('\end'))) {
+    my $drop_open = $gullet->readToken;
+    my $env       = $gullet->readBalanced;
+    last if ToString($env) eq $kind; }
+  $stomach->egroup;
+  return; }
+
+DefConstructorI(T_CS('\begin{diagram}'), undef, '<ltx:ERROR>{diagram}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'diagram') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\enddiagram', '\relax');
 
 #**********************************************************************
 
