@@ -1,0 +1,55 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# | marginnote.sty                                                      | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+DeclareOption('fulladjust',undef);
+DeclareOption('heightadjust',undef);
+DeclareOption('depthadjust',undef);
+DeclareOption('noadjust',undef);
+DeclareOption('parboxrestore',undef);
+DeclareOption('noparboxrestore',undef);
+ProcessOptions();
+
+DefMacro('\@mn@@@marginnote []{}[]',Tokens());
+DefMacro('\@mn@@marginnote',Tokens());
+DefMacro('\@mn@atthispage',Tokens());
+DefMacro('\@mn@currpage',Tokens());
+DefMacro('\@mn@currxpos',Tokens());
+DefMacro('\@mn@if@RTL',Tokens());
+DefMacro('\@mn@marginnote',Tokens());
+DefMacro('\@mn@margintest',Tokens());
+DefMacro('\@mn@thispage',Tokens());
+DefMacro('\@mn@verbosefalse',Tokens());
+DefMacro('\@mn@verbosetrue',Tokens());
+DefMacro('\mn@lastxpos',Tokens());
+DefMacro('\mn@pagewidth',Tokens());
+DefMacro('\mn@parboxrestore',Tokens());
+DefMacro('\mn@savepos',Tokens());
+DefMacro('\mn@strut',Tokens());
+DefMacro('\mn@vadjust',Tokens());
+DefMacro('\mn@vlap',Tokens());
+DefMacro('\mn@zbox {}',Tokens());
+
+DefConditional('\if@mn@verbose', undef);
+DefMacro('\marginfont',Tokens());
+DefMacro('\marginnote []{}[]','\footnote{#2}');
+DefMacro('\marginnotetextwidth',Tokens());
+Let('\marginnotetextwidth','\textwidth');
+DefMacro('\marginnotevadjust',Tokens());
+Let('\marginnotevadjust','\z@');
+
+DefMacro('\newmarginnote',Tokens());
+Let('\newmarginnote','\newlabel');
+DefMacro('\raggedleftmarginnote',Tokens());
+DefMacro('\raggedrightmarginnote',Tokens());
+DefMacro('\themn@abspage',Tokens());
+
+#======================================================================
+1;
