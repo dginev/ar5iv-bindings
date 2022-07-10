@@ -1,0 +1,13 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  changepage                                                         | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+RequirePackage('changepage');
+
+1;

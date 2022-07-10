@@ -1,0 +1,33 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  changepage                                                         | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+DeclareOption('strict', undef);
+
+DefConditional('\ifoddpage');
+DefConditional('\ifstrictpagecheck');
+DefConditional('\ifcpstrict');
+DefConditional('\ifcpoddpage');
+
+DefMacro('\strictpagecheck','');
+DefMacro('\easypagecheck','');
+DefMacro('\pmemlabel{}','');
+DefMacro('\newpmemlabel{}{}','');
+DefMacro('\pmemlabelref{}','');
+DefMacro('\checkoddpage','');
+DefMacro('\cplabelprefix','');
+DefMacro('\cplabel{}','');
+DefMacro('\newcplabel{}{}','');
+
+DefEnvironment('{adjustwidth} OptionalMatch:* []{}{}','#body');
+
+DefMacro('\changetext{}{}{}{}{}','');
+DefMacro('\changepage{}{}{}{}{}{}{}{}{}','');
+
+1;
