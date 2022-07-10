@@ -1,0 +1,29 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  oldgerm                                                            | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# Not much to do for LaTeXML, similar to yfonts.sty.ltxml
+
+DefPrimitiveI('\frakfamily', undef, undef, font => { family => 'fraktur' });
+# These font families are otherwise unrecognized...
+DefPrimitiveI('\swabfamily', undef, undef, font => { family => 'schwabacher' });
+DefPrimitiveI('\gothfamily', undef, undef, font => { family => 'gothic' });
+
+# Nothing likely to every be used, but for completeness...
+DefMacro('\gothdefault', 'ygoth');
+DefMacro('\swabdefault', 'yswab');
+DefMacro('\frakdefault', 'yfrak');
+
+RawTeX(<<'EOL');
+\DeclareTextFontCommand{\textgoth}{\gothfamily}
+\DeclareTextFontCommand{\textswab}{\swabfamily}
+\DeclareTextFontCommand{\textfrak}{\frakfamily}
+EOL
+
+1;

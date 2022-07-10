@@ -18,5 +18,6 @@ use LaTeXML::Package;
 LoadClass('OmniBus');
 
 InputDefinitions('tlp',type=>'cls',noltxml=>1);
+DefMacro('\citeauthoryear{}{}{}','#2 #3');
 
 1;
