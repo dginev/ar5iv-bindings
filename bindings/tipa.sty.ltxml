@@ -1,0 +1,17 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  tipa.sty                                                           | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Deyan Ginev <deyan.ginev@gmail.com>                         #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# load raw for now.
+InputDefinitions('tipa', 'type' => 'sty', 'noltxml' => 1);
+
+1;
