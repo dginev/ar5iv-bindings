@@ -19,7 +19,22 @@ use LaTeXML::Package;
 
 # simple stub for now?
 #InputDefinitions('lettrine','type'=>'sty','noltxml'=>1);
-DefMacro('\lettrine{}{}','\textbf{#1}#2');
+RawTeX(<<'EOL');
+\setcounter{DefaultLines}{2}
+\setcounter{DefaultDepth}{0}
+\renewcommand*{\DefaultLoversize}{0}
+\renewcommand*{\DefaultLraise}{0}
+\renewcommand*{\DefaultLhang}{0}
+\newlength\DefaultFindent
+\newlength\DefaultNindent
+\newlength\DefaultSlope
+\newlength\DiscardVskip
+\setlength{\DefaultFindent}{0pt}
+\setlength{\DefaultNindent}{0.5em}
+\setlength{\DefaultSlope}{0pt}
+\setlength{\DiscardVskip}{0.2pt}
+EOL
+DefMacro('\lettrine[]{}{}','\textbf{#2}#3');
 #**********************************************************************
 
 1;
