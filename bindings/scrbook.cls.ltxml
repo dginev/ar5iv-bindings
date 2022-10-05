@@ -1,0 +1,24 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  scrbook.cls                                                        | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+Warn('missing_file', 'scrbook.cls', $STATE->getStomach->getGullet,
+  'scrbook.cls is only minimally stubbed and will not be interpreted raw.');
+
+LoadClass('OmniBus');
+DefMacro('\setkomafont{}{}', Tokens());
+DefMacro('\setcapindent{}', Tokens());
+DefMacro('\deffootnote[]{}{}{}', Tokens());
+DefMacro('\deffootnotemark{}',Tokens());
+
+#**********************************************************************
+
+1;
