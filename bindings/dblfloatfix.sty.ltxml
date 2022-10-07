@@ -1,0 +1,14 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  dblfloatfix                                                        | #
+# | Core TeX Implementation for LaTeXML                                 | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# shouldn't be needed in latexml...
+
+1;
