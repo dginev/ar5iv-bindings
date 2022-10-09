@@ -1,0 +1,50 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# | ucs.sty                                                             | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+
+DefMacro('\SetUnicodeOption{}', Tokens());
+DefMacro('\unicodevirtual{}',   '#1');
+DefMacro('\unicodecombine',     Tokens());
+DefMacro('\unichar Expanded', sub {
+    my ($stomach, $hexcode) = @_;
+    my $char = $hexcode->toString();
+    if ($char =~ /^[0-9a-fA-F]+$/) {
+      if ((my $cp = hex($char)) <= 0x10FFFF) {
+        return T_OTHER(UTF($cp)); }
+      else {
+        Error('unexpected', $char, $stomach,
+          "$char too large for Unicode. Values between 0 and 10FFFF are permitted."); } }
+    else {
+      Error('unexpected', $char, $stomach,
+        "'$char' is not a hexadecimal number."); }
+    return Tokens(); });
+
+# latexml-specific implementation, relying on the LaTeX.pool.ltxml support
+DefMacro('\DeclareUnicodeCharacterAsOptional{}{}{}', '\DeclareUnicodeCharacter{#1}{#3}');
+Let('\@saved@DeclareUnicodeCharacter', '\DeclareUnicodeCharacter');
+DefMacro('\DeclareUnicodeCharacter Expanded {}', sub {
+    my ($gullet, $hexcode, $expansion) = @_;
+    my $hex = $hexcode->toString();
+    $hex =~ s/^"//;
+    return Invocation(
+      T_CS('\@saved@DeclareUnicodeCharacter'), T_OTHER($hex), $expansion
+)->unlist; });
+
+DefMacro('\DeclareUnicodeOption[]{}',   Tokens());
+DefMacro('\LinkUnicodeOptionToPkg{}{}', Tokens());
+
+DefMacro('\PreloadUnicodePage{}', Tokens());
+DefMacro('\PrerenderUnicode{}',   Tokens());
+
+#**********************************************************************
+
+1;
