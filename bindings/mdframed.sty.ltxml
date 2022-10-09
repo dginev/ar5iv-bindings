@@ -1,0 +1,38 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# | mdframed.sty                                                        | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+Warn('missing_file', 'mdframed.sty', $STATE->getStomach->getGullet,
+  'mdframed.sty is only minimally stubbed and will not be interpreted raw.');
+
+RequirePackage('kvoptions');
+RequirePackage('xparse');
+RequirePackage('etoolbox');
+RequirePackage('xcolor');
+
+DefMacro('\newmdtheoremenv[]{}{}[]',  Tokens());
+DefMacro('\newmdenv[]{}',             Tokens());
+DefMacro('\renewmdenv[]{}',           Tokens());
+DefMacro('\surroundwithmdframed[]{}', Tokens());
+DefMacro('\mdfsubtitle[]{}',          Tokens());
+DefMacro('\mdfapptodefinestyle{}{}',  Tokens());
+DefMacro('\mdfsetup{}',               Tokens());
+DefMacro('\mdfdefinestyle{}{}',       Tokens());
+DefRegister('\mdflength', Dimension(0));
+
+DefEnvironment('{mdframed}[]', '<ltx:inline-block framed="rectangle" framecolor="#framecolor" _noautoclose="1">#body</ltx:inline-block>',
+  properties => sub {
+    (framecolor => LookupValue('font')->getColor)
+  });
+
+#**********************************************************************
+
+1;
