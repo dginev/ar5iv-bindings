@@ -1,0 +1,21 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# | ltablex.sty                                                         | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+Warn('missing_file', 'ltablex.sty', $STATE->getStomach->getGullet,
+  'ltablex.sty is only minimally stubbed and will not be interpreted raw.');
+
+RequirePackage('tabularx');
+RequirePackage('longtable');
+
+#**********************************************************************
+
+1;

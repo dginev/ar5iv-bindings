@@ -1,0 +1,43 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# | tabu.sty                                                            | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+Warn('missing_file', 'tabu.sty', $STATE->getStomach->getGullet,
+  'tabu.sty is only minimally stubbed and will not be interpreted raw.');
+
+RequirePackage('array');
+RequirePackage('varwidth');
+RequirePackage('longtable');
+
+DefMacro('\tabu','\tabular');
+DefMacro('\endtabu','\endtabular');
+DefMacro('\longtabu','\longtable');
+DefMacro('\endlongtabu','\endlongtable');
+
+#stubs
+DefMacro('\savetabu{}',Tokens());
+DefMacro('\usetabu{}',Tokens());
+DefMacro('\preamble{}',Tokens());
+DefMacro('\tabulinestyle{}',Tokens());
+DefMacro('\newtabulinestyle{}',Tokens());
+DefMacro('\tabucline[]{}','\hline');
+DefMacro('\taburulecolor OptionalMatch:| OptionalUntil:| {}', Tokens());
+DefMacro('\taburowcolors[] Number {}', Tokens());
+DefMacro('\tabuphantomline', Tokens());
+DefRegister('\tracingtabu', Number(0));
+
+DefRegister('\tabulinesep' => Dimension(0));
+DefRegister('\abovetabulinesep' => Dimension(0));
+DefRegister('\belowtabulinesep' => Dimension(0));
+
+#**********************************************************************
+
+1;

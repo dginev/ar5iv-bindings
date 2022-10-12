@@ -1,0 +1,24 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# | xltabular.sty                                                       | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+Warn('missing_file', 'xltabular.sty', $STATE->getStomach->getGullet,
+  'xltabular.sty is only minimally stubbed and will not be interpreted raw.');
+
+RequirePackage('tabularx');
+RequirePackage('longtable');
+
+DefMacro('\xltabular','\tabularx');
+DefMacro('\endxltabular','\endtabularx');
+
+#**********************************************************************
+
+1;
