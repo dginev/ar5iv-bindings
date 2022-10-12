@@ -1,0 +1,58 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# | memoir.cls                                                          | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+Warn('missing_file', 'memoir.cls', $STATE->getStomach->getGullet,
+  'memoir.cls is only minimally stubbed and will not be interpreted raw.');
+
+LoadClass('OmniBus');
+RequirePackage('iftex');
+RequirePackage('array');
+RequirePackage('dcolumn');
+# RequirePackage('delarray'); # TODO
+RequirePackage('tabularx');
+RequirePackage('textcase');
+
+# These are originally \EmulatedPackage directives
+# RequirePackage('abstract'); # TODO
+RequirePackage('appendix');
+RequirePackage('booktabs');
+# RequirePackage('ccaption'); # TODO
+RequirePackage('changepage');
+RequirePackage('chngcntr');
+RequirePackage('chngpage');
+RequirePackage('crop');
+RequirePackage('enumerate');
+RequirePackage('epigraph');
+# RequirePackage('ifmtarg'); # TODO
+# RequirePackage('index'); # TODO
+RequirePackage('makeidx');
+# RequirePackage('moreverb'); # TODO
+RequirePackage('needspace');
+# RequirePackage('newfile'); # TODO
+# RequirePackage('nextpage'); # TODO
+# RequirePackage('pagenote'); # TODO
+RequirePackage('parskip');
+# RequirePackage('patchcmd'); # TODO
+RequirePackage('setspace');
+# RequirePackage('shortvrb'); # TODO
+# RequirePackage('showidx'); # TODO
+# RequirePackage('titleref'); # TODO
+RequirePackage('titling');
+RequirePackage('tocbibind');
+# RequirePackage('tocloft'); # TODO
+# RequirePackage('tocvsec2'); # TODO
+RequirePackage('verbatim');
+# RequirePackage('verse'); # TODO
+
+#**********************************************************************
+
+1;
