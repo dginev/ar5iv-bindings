@@ -3,13 +3,7 @@
 # |  breqn.sty                                                          | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
-# | Part of LaTeXML:                                                    | #
-# |  Public domain software, produced as part of work done by the       | #
-# |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
-# \=========================================================ooo==U==ooo=/ #
+
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
@@ -21,7 +15,7 @@ Warn('missing_file', 'breqn.sty', $STATE->getStomach->getGullet, 'breqn.sty is n
 
 #**********************************************************************
 
-# Forbid loading this package, even locally, until we 
+# Forbid loading this package, even locally, until we
 # can implement it natively
 #InputDefinitions('breqn', type => 'sty', noltxml => 1);
 

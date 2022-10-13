@@ -3,13 +3,7 @@
 # |  crckapb.sty                                                        | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
-# | Part of LaTeXML:                                                    | #
-# |  Public domain software, produced as part of work done by the       | #
-# |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
-# \=========================================================ooo==U==ooo=/ #
+
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
@@ -55,37 +49,37 @@ RawTeX(<<'EOL');
 
 
 \newif\if@subtitledefined
- 
-\lineskip 1pt 
+
+\lineskip 1pt
 \normallineskip 1pt
 \def\baselinestretch{1}
 
-\oddsidemargin .2in % .25in 
+\oddsidemargin .2in % .25in
 \evensidemargin .2in % 1.25in
 
-\marginparwidth 1in 
+\marginparwidth 1in
 \marginparsep 10pt % 7pt
 
-\topmargin -0.6mm % .73in 
-\headheight 12pt 
-\headsep 6mm % .275in 
+\topmargin -0.6mm % .73in
+\headheight 12pt
+\headsep 6mm % .275in
 \footskip 39pt
- 
-\textheight 19cm        % 21.5cm     
-\textwidth  12.5cm      % 15cm     
 
-% \marginpar redefined: text is set within \fbox 
+\textheight 19cm        % 21.5cm
+\textwidth  12.5cm      % 15cm
+
+% \marginpar redefined: text is set within \fbox
 
 \long\def\@savemarbox#1#2{\global\setbox#1\vtop{\fbox{\vtop{\hsize\marginparwidth
     \@parboxrestore  \raggedright\footnotesize #2}}}}
 
 \def\vsecspace#1{\ifvmode\if@nobreak\else\vskip #1\relax\fi\fi}
 
-\def\verse{\let\\=\@centercr  
+\def\verse{\let\\=\@centercr
   \list{}{\itemsep\z@
   \parskip 12pt
   \itemindent -1.5em
-  \listparindent \itemindent 
+  \listparindent \itemindent
   \rightmargin\leftmargin\advance\leftmargin 1.5em}\item[]}
 \let\endverse\endlist
 
@@ -94,7 +88,7 @@ RawTeX(<<'EOL');
 %  \leftmargin 0pt
   \leftmargin 1.5em
   \listparindent 1em
-  \topsep .5ex plus 2pt minus 1pt 
+  \topsep .5ex plus 2pt minus 1pt
   \itemindent\listparindent
   \parsep 0pt plus 1pt}\item[]\hskip-1em}
 \def\endquotation{\endlist\par}
@@ -105,7 +99,7 @@ RawTeX(<<'EOL');
 \let\endquote=\endlist
 
 \def\descriptionlabel#1{\hspace\labelsep \bf #1}
-\def\description{\list{}{\labelwidth\z@ 
+\def\description{\list{}{\labelwidth\z@
    \itemindent-\leftmargin
    \let\makelabel\descriptionlabel}}
 \let\enddescription\endlist
@@ -153,7 +147,7 @@ RawTeX(<<'EOL');
 \def\thesubsubsection {\thesubsection .\arabic{subsubsection}}
 \def\theparagraph     {\thesubsubsection.\arabic{paragraph}}
 \def\thesubparagraph  {\theparagraph.\arabic{subparagraph}}
-                     
+
 \def\@chapapp{Chapter}
 
 
@@ -164,8 +158,8 @@ RawTeX(<<'EOL');
      \@tempswatrue           %       @tempswa := true
     \else \@tempswafalse     %  ELSE @tempswa := false
   \fi                        % FI
-  \hbox{}\vfil               % Add fil glue to center title  
-  \secdef\@part\@spart}     
+  \hbox{}\vfil               % Add fil glue to center title
+  \secdef\@part\@spart}
 
 \def\@part[#1]#2{\ifnum \c@secnumdepth >-2\relax  % IF secnumdepth > -2
         \refstepcounter{part}                     %   THEN step part counter
@@ -180,15 +174,15 @@ RawTeX(<<'EOL');
     \vskip 20pt \fi                  %        Add space before title.
     \Huge \bf                        % FI
     #1\par}\@endpart}                % Print Title in \Huge bold.
-    
+
 \def\@endpart{\vfil\newpage   % End page with 1fil glue.
    \if@twoside                % IF twoside printing
        \hbox{}                %   THEN Produce totally blank page
-       \thispagestyle{empty}  
-       \newpage        
+       \thispagestyle{empty}
+       \newpage
    \fi                        % FI
-   \if@tempswa                % IF @tempswa = true       
-     \twocolumn               %   THEN \twocolumn 
+   \if@tempswa                % IF @tempswa = true
+     \twocolumn               %   THEN \twocolumn
    \fi}                       % FI
 
 \def\@spart#1{{\centering      % %% added 19 Jan 88
@@ -209,26 +203,26 @@ RawTeX(<<'EOL');
 \def\l@part#1#2{\addpenalty{-\@highpenalty}
    \addvspace{2.25em plus 1pt}  % space above part line
    \begingroup
-   \@tempdima 3em         % width of box holding part number, used by 
+   \@tempdima 3em         % width of box holding part number, used by
      \parindent \z@ \rightskip \@pnumwidth             %% \numberline
-     \parfillskip -\@pnumwidth   
+     \parfillskip -\@pnumwidth
      {\large \bf          % set line in \large boldface
-     \leavevmode          % TeX command to enter horizontal mode.       
+     \leavevmode          % TeX command to enter horizontal mode.
      #1\hfil \hbox to\@pnumwidth{\hss #2}}\par
      \nobreak             % Never break after part entry
-    \global\@nobreaktrue                        %% Added 24 May 89 as 
+    \global\@nobreaktrue                        %% Added 24 May 89 as
     \everypar{\global\@nobreakfalse\everypar{}}%% suggested by Jerry Leichter
    \endgroup}
 
-\def\l@chapter#1#2{\addpenalty{-\@highpenalty}  
+\def\l@chapter#1#2{\addpenalty{-\@highpenalty}
    \vskip 1.0em plus 1pt  % space above chapter line
    \@tempdima 1.5em       % width of box holding chapter number
    \begingroup
-     \parindent \z@ \rightskip \@pnumwidth 
-     \parfillskip -\@pnumwidth   
+     \parindent \z@ \rightskip \@pnumwidth
+     \parfillskip -\@pnumwidth
      \bf                  % Boldface.
-     \leavevmode          % TeX command to enter horizontal mode.       
-      \advance\leftskip\@tempdima  %% added 5 Feb 88 to conform to 
+     \leavevmode          % TeX command to enter horizontal mode.
+      \advance\leftskip\@tempdima  %% added 5 Feb 88 to conform to
       \hskip -\leftskip            %% 25 Jan 88 change to \numberline
      #1\nobreak\hfil \nobreak\hbox to\@pnumwidth{\hss #2}\par
      \penalty\@highpenalty %% added 24 May 89 as suggested by J. Leichter
@@ -281,12 +275,12 @@ RawTeX(<<'EOL');
 \def\@figcapfont{\footnotesize}
 
 \long\def\@makecaption#1#2{\vskip 10pt
- \ifnum\cap@type=1 
+ \ifnum\cap@type=1
   \typeout{Figure \thefigure}%
   \setbox\@tempboxa\hbox{\@figcapfont #1 #2}%
   \ifdim \wd\@tempboxa >\hsize \unhbox\@tempboxa\@figcapfont\par \else
    \hbox to\hsize{\hbox{}\hfil\box\@tempboxa\hfil} \fi \fi
-  \ifnum\cap@type=2 
+  \ifnum\cap@type=2
    \typeout{\tablename\space\thetable}%
    \if@adjustcaption
    \if@tabularabovecaption\@maketablecaption{#1}{#2}\else
@@ -307,7 +301,7 @@ RawTeX(<<'EOL');
     \else
     \hbox to\hsize{\hfil\box\@tempboxa\hfil} \fi
   \fi \vspace{3pt}}
- 
+
 
 \let\kap@tabular\tabular
 \let\kap@endtabular\endtabular
@@ -317,7 +311,7 @@ RawTeX(<<'EOL');
 
 
 \def\tabular{%
-\def\hline{\noalign{\ifnum0=`}\fi\vskip 3pt\hrule \@height \arrayrulewidth 
+\def\hline{\noalign{\ifnum0=`}\fi\vskip 3pt\hrule \@height \arrayrulewidth
 \vskip 3pt \futurelet
    \@tempa\@xhline}
 \begingroup\centering\if@captionabovetabular
@@ -546,7 +540,7 @@ RawTeX(<<'EOL');
 \def\sectionmark##1{}%
 \def\subsectionmark##1{}}
 
-\else\if@proceedings 
+\else\if@proceedings
 
 \def\ps@headings{\let\@mkboth\@gobbletwo
 \def\@oddfoot{}\def\@evenfoot{}%       No feet.
@@ -654,7 +648,7 @@ RawTeX(<<'EOL');
    \let\author=\opening@only
    \let\institute=\opening@only
    \let\date=\opening@only}
- 
+
 \def\opening@only#1{\kap@warning\typeout{ -- \string\title, \string\subtitle,
   \string\author, \string\institute, or \string\date { }effective only
   inside}\typeout{ -- opening environment. Please refer to Author's
@@ -665,7 +659,7 @@ RawTeX(<<'EOL');
 \let\author=\opening@only
 \let\institute=\opening@only
 \let\date=\opening@only
- 
+
 
 \newtoks\t@a
 \newtoks\t@b
@@ -703,8 +697,8 @@ RawTeX(<<'EOL');
 \def\date@#1{}
 
 
-\newif\ifthanks 
-\newbox\@kapbox 
+\newif\ifthanks
+\newbox\@kapbox
 \newcount\@kapcount
 
 
@@ -818,7 +812,7 @@ RawTeX(<<'EOL');
 
 \let\kapenddocument\enddocument
 \def\enddocument{\label{lastpage} \kapenddocument}
- 
+
 \def\editor#1{\gdef\@kapident{\hbox{}\hfill\elvtt #1\\
   \hbox{}\hfill\jobname.tex - Date: \today~Time: \timenow\par}}
 \let\typesetter\editor
@@ -836,7 +830,7 @@ RawTeX(<<'EOL');
 \def\timenow{\@hour=\time \divide\@hour by 60 \number\@hour:%
   \multiply\@hour by 60 \@minute=\time \global\advance\@minute by -\@hour%
   \ifnum\@minute<10 0\number\@minute\else\number\@minute\fi}
- 
+
 \def\journal#1{\@ifundefined{@#1}{\kap@warning\typeout{ --
       Journal code `#1' does not exist.^^J}}{\csname @#1\endcsname}
   \gdef\@copyright{\footnotesize
