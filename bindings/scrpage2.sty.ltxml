@@ -1,0 +1,14 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# | scrpage2.sty                                                        | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+RequirePackage('scrpage');
+
+1;
