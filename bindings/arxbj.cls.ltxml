@@ -13,7 +13,31 @@ use LaTeXML::Package;
 
 LoadClass('OmniBus');
 RequirePackage('elsart_support');
+RequirePackage('amssymb');
+RequirePackage('bm');
+RequirePackage('keyval');
+RequirePackage('hyperref');
+# RequirePackage('texsort');
 
+DefMacro('\pdftitle {}', '');
+DefMacro('\pdfauthor {}', '');
+DefMacro('\pdfsubject {}', '');
+DefMacro('\pdfkeywords {}', '');
+DefMacro('\printhistory','');
+
+# Motivated by arXiv:1102.2078
+DefMacro('\tfrac{}{}','{\textstyle\frac{#1}{#2}}');
+DefMacro('\dfrac{}{}','{\displaystyle\frac{#1}{#2}}');
+DefMacro('\dvt','\colon\ ');
+DefMacro('\dvtx','\mathchoice{\nobreak\,\colon\relax}%
+{\nobreak\,\colon\relax}%
+{\nobreak\,\colon\;\relax}%
+{\nobreak\,\colon\;\relax}%');
+Let('\longlist','\list');
+Let('\endlonglist','\endlist');
+DefMacro('\MR{}','\href{http://www.ams.org/mathscinet-getitem?mr=#1}{MR#1}');
+DefMacroI(T_CS('\remark*'),undef,'\begin{remark}');
+DefMacroI(T_CS('\endremark*'),undef,'\end{remark}');
 #**********************************************************************
 
 1;
