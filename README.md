@@ -1,4 +1,4 @@
-# arxmliv-bindings
+# ar5iv-bindings
 
 Extended LaTeXML bindings for converting the older sources of arXiv.org
 
