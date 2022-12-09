@@ -1,0 +1,29 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  tabularray.sty                                                     | #
+# | Tricks and tweaks to preload during arXiv's archival conversion     | #
+# |                                                                     | #
+# | you probably won't need to preload this file in a submission setting| #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+Warn('missing_file', 'tabularray.sty', $STATE->getStomach->getGullet, 'tabularray.sty is not implemented and will not be interpreted raw.');
+
+RequirePackage('booktabs');
+
+DefMacro('\tblr','\tabular');
+DefMacro('\endtblr','\endtabular');
+
+DefMacro('\booktabs','\tabular');
+DefMacro('\endbooktabs','\endtabular');
+
+DefMacro('\UseTblrLibrary','\usepackage');
+DefMacro('\SetCell[]{}',Tokens());
+DefMacro('\SetCells[]{}',Tokens());
+
+
+1;
