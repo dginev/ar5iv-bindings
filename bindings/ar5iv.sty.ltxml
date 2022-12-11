@@ -12,6 +12,6 @@ use warnings;
 use LaTeXML::Package;
 
 # No \today, useful when re-converting older archival articles
-DefMacro('\today', '\relax', locked => 1, scope => 'global');
+DefMacroI('\today', undef, '\relax', locked => 1, scope => 'global');
 
 1;
