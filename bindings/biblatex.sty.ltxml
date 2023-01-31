@@ -16,6 +16,11 @@ Warn('missing_file', 'biblatex.sty', $STATE->getStomach->getGullet,
 
 #**********************************************************************
 
+DefKeyVal('biblatex', 'maxbibnames', 'Number', '4', code => sub {
+    $STATE->assignValue('biblatex_maxbibnames' => int(ToString($_[1])), 'global'); });
+DeclareOption(undef, sub { });    # for now ignore all other ooptions.
+ProcessOptions(inorder => 1, keysets => ['biblatex']);
+
 RequirePackage('url');
 # convenience addon, in case hyperref is not loaded.
 DefMacro('\href Verbatim {}', '\@@Url\href{}{}{#1}{#2}');
@@ -186,7 +191,7 @@ DefMacro('\endentry', sub {
     my $author_count = scalar(@author_names);
     # special case: long lists use "et al."
     # TODO: this is configurable via a package option, upgrade when possible.
-    my $etal_limit     = 4;
+    my $etal_limit     = LookupValue('biblatex_maxbibnames') || 4;
     my $etal_flag      = ($author_count > $etal_limit);
     my $author_index   = 0;
     my @authors_tokens = ();
