@@ -1,0 +1,18 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  pinlabel.sty                                                       | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+
+Warn('missing_file', 'pinlabel.sty', $STATE->getStomach->getGullet, 'pinlabel.sty is not implemented and will not be interpreted raw.');
+
+#**********************************************************************
+
+1;
