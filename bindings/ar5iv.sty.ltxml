@@ -14,4 +14,33 @@ use LaTeXML::Package;
 # No \today, useful when re-converting older archival articles
 DefMacroI('\today', undef, '\relax', locked => 1, scope => 'global');
 
+# Experiment: When we detect a math element containing solely a floating superscript in the
+#             *Frontmatter* of a document, assume it is a note mark, and normalize it down to
+#             plain text.
+DefRewrite(xpath => 'descendant::*[local-name()="creator" or local-name()="titlepage"]' .
+    '/descendant::ltx:Math[child::ltx:XMath[child::ltx:XMApp[' .
+    '@role="FLOATSUPERSCRIPT" and not(preceding-sibling::*) and not(following-sibling::*)]]]',
+  replace => sub {
+    my ($document, $math) = @_;
+# We can assume the grandchild of the XMath node is the XMArg, which we need to normalize to scripted Unicode.
+    if (my @xmath = element_nodes($math)) {
+      if (my @xmapp = element_nodes($xmath[0])) {
+        if (my @xmarg = element_nodes($xmapp[0])) {
+          my $text = $xmarg[0]->textContent;
+          # For now be conservative and only recognize
+          # - numeric cases
+          # - daggers
+          # - latin letters
+          # - basic ,; punctuation
+          # - spaces
+          if ($text && $text =~ /^[,;\x{2020}\x{2021}\d\sa-z]+$/) {
+            local $LaTeXML::BOX = $document->getNodeBox($document->getNode->parentNode);
+            $document->insertElement('ltx:sup', $text);
+            return;
+    } } } }
+    # should never happen, but just in case:
+    Warn("rewrite", "footnotemark", "Failed to substitute math script with a ltx:sup text equivalent.");
+    $document->getNode->appendChild($math);
+    return; });
+
 1;
