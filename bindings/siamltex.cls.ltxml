@@ -12,6 +12,15 @@ use LaTeXML::Package;
 #**********************************************************************
 
 LoadClass('OmniBus');
+# also supports theorems and similar
+RequirePackage('amsthm');
+RawTeX(<<'EOL');
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+EOL
 
 Let('\Appendix', '\appendix');
 
