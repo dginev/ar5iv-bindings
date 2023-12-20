@@ -9,6 +9,8 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
+RequirePackage('tikz');
+
 #**********************************************************************
 
 Warn('missing_file', 'tikz-cd.sty', $STATE->getStomach->getGullet, 'tikz-cd.sty is not implemented and will not be interpreted raw.');
