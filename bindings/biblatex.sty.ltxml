@@ -21,9 +21,7 @@ DefKeyVal('biblatex', 'maxbibnames', 'Number', '4', code => sub {
 DeclareOption(undef, sub { });    # for now ignore all other ooptions.
 ProcessOptions(inorder => 1, keysets => ['biblatex']);
 
-RequirePackage('url');
-# convenience addon, in case hyperref is not loaded.
-DefMacro('\href Verbatim {}', '\@@Url\href{}{}{#1}{#2}');
+RequirePackage('hyperref'); # for url and href
 #RequirePackage('natbib');
 # RequirePackage('logreq');
 RequirePackage('ifthen');
