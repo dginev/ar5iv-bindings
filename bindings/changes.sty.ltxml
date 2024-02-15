@@ -1,0 +1,63 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# | changes.sty                                                         | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# For now this is a basic stub binding that only preserves the final content,
+# but silently drops the changes-related metadata.
+
+#======================================================================
+RequirePackage('xcolor');
+RequirePackage('ulem');
+# RequirePackage('truncate');
+# No effect from etoolbox.sty
+RequirePackage('todonotes');
+# No effect from xkeyval.sty
+RequirePackage('xstring');
+
+DefMacro('\added[]{}','#2');
+DefMacro('\deleted[]{}',Tokens());
+DefMacro('\replaced[]{}{}','#2');
+DefMacro('\highlight[]{}','#2');
+DefMacro('\comment[]{}','#2');
+
+DefMacro('\ChangesListline{}{}{}{}',Tokens());
+DefMacro('\listofchangesname','List of changes');
+DefMacro('\summaryofchangesname','Changes');
+DefMacro('\compactsummaryofchangesname','Changes (compact)');
+DefMacro('\changesaddedname','Added');
+DefMacro('\changesdeletedname','Deleted');
+DefMacro('\changesreplacedname','Replaced');
+DefMacro('\changeshighlightname','Highlighted');
+DefMacro('\changescommentname','Commented');
+DefMacro('\changesauthorname','Author');
+DefMacro('\changesanonymousname','anonymous');
+DefMacro('\changesnochanges','No changes.');
+DefMacro('\changesnoloc','List of changes is available after the next \LaTeX\ run.');
+DefMacro('\changesnosoc','Summary of changes is available after the next \LaTeX\ run.');
+
+Let('\cleaders','\leaders');
+DefMacro('\definechangesauthor[]{}',Tokens());
+DefMacro('\listofchanges[]',Tokens());
+DefMacro('\origcontentsline',Tokens());
+DefMacro('\setaddedmarkup{}',Tokens());
+DefMacro('\setauthormarkup{}',Tokens());
+DefMacro('\setauthormarkupposition{}',Tokens());
+DefMacro('\setanonymousname{}',Tokens());
+DefMacro('\setauthormarkuptext{}',Tokens());
+DefMacro('\setcommentmarkup{}',Tokens());
+DefMacro('\setdeletedmarkup{}',Tokens());
+DefMacro('\sethighlightmarkup{}',Tokens());
+DefMacro('\setlocextension{}',Tokens());
+DefMacro('\setsocextension{}',Tokens());
+DefMacro('\setsummarytowidth{}',Tokens());
+DefMacro('\setsummarywidth{}',Tokens());
+DefMacro('\settruncatewidth{}',Tokens());
+#======================================================================
+1;
