@@ -21,7 +21,7 @@ DefKeyVal('biblatex', 'maxbibnames', 'Number', '4', code => sub {
 DeclareOption(undef, sub { });    # for now ignore all other ooptions.
 ProcessOptions(inorder => 1, keysets => ['biblatex']);
 
-RequirePackage('hyperref'); # for url and href
+RequirePackage('hyperref');    # for url and href
 #RequirePackage('natbib');
 # RequirePackage('logreq');
 RequirePackage('ifthen');
@@ -385,8 +385,8 @@ sub init_verb {
             push(@escaped_tokens, $next); } } }
       PushValue('biblatex_verb_content', @escaped_tokens); });
   return (); }
-DefMacro('\verb{}', \&init_verb);
-DefMacro('\endverb', sub {
+DefMacro('\biblatex@verb{}', \&init_verb);
+DefMacro('\biblatex@endverb', sub {
     my $entry        = LookupValue('biblatex_entry');
     my @verb_content = ();
     while (my $saved_content = PopValue('biblatex_verb_content')) {
@@ -407,7 +407,9 @@ DefPrimitive('\addbibresource{}', sub {
 Let('\biblatex@saved@bibliography', '\bibliography');
 Let('\bibliography',                '\addbibresource');
 
-DefMacro('\printbibliography[]', sub {
+DefMacro('\printbibliography', '\makeatletter\let\verb\biblatex@verb\let\endverb\biblatex@endverb'
+    . '\makeatother\biblatex@printbibliography');
+DefMacro('\biblatex@printbibliography[]', sub {
     my @resources = ();
     while (my $res = PopValue('biblatex_resources')) {
       push(@resources, T_OTHER(','), T_SPACE) if @resources;
