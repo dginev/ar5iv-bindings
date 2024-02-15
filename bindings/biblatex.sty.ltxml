@@ -407,8 +407,8 @@ DefPrimitive('\addbibresource{}', sub {
 Let('\biblatex@saved@bibliography', '\bibliography');
 Let('\bibliography',                '\addbibresource');
 
-DefMacro('\printbibliography', '\makeatletter\let\verb\biblatex@verb\let\endverb\biblatex@endverb'
-    . '\makeatother\biblatex@printbibliography');
+DefMacro('\printbibliography', '\let\verb\biblatex@verb\let\endverb\biblatex@endverb'
+    . '\biblatex@printbibliography');
 DefMacro('\biblatex@printbibliography[]', sub {
     my @resources = ();
     while (my $res = PopValue('biblatex_resources')) {
