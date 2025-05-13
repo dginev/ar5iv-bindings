@@ -11,6 +11,9 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
+# Practical maximum for warnings (avoid infinite loops overflowing the log file)
+AssignValue('MAX_WARNINGS', 10_000, 'global');
+
 # No \today, useful when re-converting older archival articles
 DefMacroI('\today', undef, '\relax', locked => 1, scope => 'global');
 
