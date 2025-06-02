@@ -1,0 +1,20 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# | datetime.sty                                                        | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+Warn('missing_file', 'datetime2.sty', $STATE->getStomach->getGullet,
+  'datetime2.sty is only minimally stubbed and will not be interpreted raw.');
+
+# InputDefinitions('datetime2', type => 'sty', noltxml => 1);
+
+#**********************************************************************
+
+1;
