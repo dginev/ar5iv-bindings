@@ -1,0 +1,15 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# | atableau.sty                                                        | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+
+Warn('missing_file', 'atableau.sty', $STATE->getStomach->getGullet,
+  'atableau.sty is only minimally stubbed and will not be interpreted raw.');
+
+1;
