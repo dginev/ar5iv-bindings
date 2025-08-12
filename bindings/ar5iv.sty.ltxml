@@ -18,3 +18,39 @@ AssignValue('MAX_WARNINGS', 10_000, 'global');
 DefMacroI('\today', undef, '\relax', locked => 1, scope => 'global');
 
 1;
+
+# The following is an anti-pattern (monkey patching),
+#  required due to no official support having been negotiated yet.
+#
+# If you want to see it go away, please comment in LaTeXML PR #2598 here:
+#  https://github.com/brucemiller/LaTeXML/pull/2598
+#
+# And help us find a path to a more official solution.
+
+use LaTeXML::Post::MathML;
+package LaTeXML::Post::MathML;
+no warnings 'redefine';
+# We will redefine the outerWrapper to ensure that the 'intent' attribute is set to ':literal'.
+# arXiv contains high-difficulty math notations, from advanced and frontier research.
+# These notations are very frequently misinterpreted in heuristic guesses for accessibility,
+#  as common in semantic enrichment. Similarly, preparatory rearrangements of the MathML tree can
+#  lead to misleading readouts. We avoid both of these common problems by requesting for the
+#  presentation MathML tree to be read "as-is", aka ":literal",
+#  following its structure and Unicode content.
+#
+#  We eagerly invite the community to conduct research on "uncovering the MathML Intents within arXiv",
+#  and can be contacted to provide references for grant bodies (write to deyan@arxiv.org).
+#
+#  Once we have indication that better semantic enrichment of math notations is possible over arXiv,
+#   we can remove this and do a complete regeneration of the arXiv HTML corpus.
+*original_outerWrapper = \&outerWrapper;
+*outerWrapper          = sub {
+  my ($self, $doc, $xmath, $mml) = @_;
+  my $wrapped = original_outerWrapper($self, $doc, $xmath, $mml);
+  if (ref $wrapped eq 'ARRAY') {
+    $$wrapped[1]{'intent'} = ':literal';
+  }
+  return $wrapped; };
+# P.S. This was tested with latexml at commit 210f0e9ed7054d80efac7247a9108da67b41a61c
+#
+1;
