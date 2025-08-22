@@ -17,8 +17,6 @@ AssignValue('MAX_WARNINGS', 10_000, 'global');
 # No \today, useful when re-converting older archival articles
 DefMacroI('\today', undef, '\relax', locked => 1, scope => 'global');
 
-1;
-
 # The following is an anti-pattern (monkey patching),
 #  required due to no official support having been negotiated yet.
 #
@@ -28,8 +26,13 @@ DefMacroI('\today', undef, '\relax', locked => 1, scope => 'global');
 # And help us find a path to a more official solution.
 
 use LaTeXML::Post::MathML;
+
 package LaTeXML::Post::MathML;
 no warnings 'redefine';
+
+if (not(exists(&{"LaTeXML::Post::MathML::original_outerWrapper"}))) {
+  *LaTeXML::Post::MathML::original_outerWrapper = \&LaTeXML::Post::MathML::outerWrapper;
+}
 # We will redefine the outerWrapper to ensure that the 'intent' attribute is set to ':literal'.
 # arXiv contains high-difficulty math notations, from advanced and frontier research.
 # These notations are very frequently misinterpreted in heuristic guesses for accessibility,
@@ -43,14 +46,14 @@ no warnings 'redefine';
 #
 #  Once we have indication that better semantic enrichment of math notations is possible over arXiv,
 #   we can remove this and do a complete regeneration of the arXiv HTML corpus.
-*original_outerWrapper = \&outerWrapper;
-*outerWrapper          = sub {
+sub new_outerWrapper {
   my ($self, $doc, $xmath, $mml) = @_;
   my $wrapped = original_outerWrapper($self, $doc, $xmath, $mml);
   if (ref $wrapped eq 'ARRAY') {
     $$wrapped[1]{'intent'} = ':literal';
   }
-  return $wrapped; };
-# P.S. This was tested with latexml at commit 210f0e9ed7054d80efac7247a9108da67b41a61c
-#
+  return $wrapped; }
+*LaTeXML::Post::MathML::outerWrapper = \&LaTeXML::Post::MathML::new_outerWrapper;
+# P.S. This was tested with latexml at commit 4429533c3011f950ed9948cd49cbbdbc28f1a8fe
+
 1;
