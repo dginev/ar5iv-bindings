@@ -19,7 +19,7 @@ DefMacro('\eqn{}{}', sub {
     if (LookupValue('IN_MATH')) {
       return $content; }
     else {
-      return (T_CS('\@@BEGINDISPLAYMATH'), $content->unlist, T_CS('\@@ENDDISPLAYMATH')); } });
+      return (T_CS('\lx@begin@display@math'), $content->unlist, T_CS('\lx@end@display@math')); } });
 
 # TODO:
 # The ToC is bookkept internally as a plain TeX feature.
