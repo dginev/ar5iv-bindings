@@ -34,26 +34,26 @@ RequirePackage('babel_support');
 #InputDefinitions('biblatex', type => 'sty', noltxml => 1);
 
 # TODO: Alternative citation styles
-DefMacro('\parencite',                                 '\cite');
-DefMacro('\Parencite',                                 '\cite');
-DefMacro('\Cite',                                      '\cite');
-DefMacro('\citet OptionalMatch:* [][] Semiverbatim',   '\cite[#2 ]{#4}');
-DefMacro('\citep OptionalMatch:* [][] Semiverbatim',   '\cite[#2]{#4}');
-DefMacro('\citealt OptionalMatch:* [][] Semiverbatim', '\cite[#2]{#4}');
-DefMacro('\citealp OptionalMatch:* [][] Semiverbatim', '\cite[#2]{#4}');
-DefMacro('\citenum',                                   '\cite');
-DefMacro('\citem',                                     '\cite');            # see 1606.07864
-DefMacro('\autocite OptionalMatch:* [][]{}',           '\cite[#2]{#4}');
-DefMacro('\Autocite OptionalMatch:* [][]{}',           '\cite[#2]{#4}');
-DefMacro('\fullcite',                                  '\cite');
-DefMacro('\footcite',                                  '\cite');
-DefMacro('\footcitetext',                              '\cite');
-DefMacro('\smartcite',                                 '\cite');
-DefMacro('\textcite',                                  '\cite');
-DefMacro('\Textcite',                                  '\cite');
-DefMacro('\supercite',                                 '\cite');
-DefMacro('\citeauthor',                                '\cite');
-DefMacro('\citetitle',                                 '\cite');
+DefMacro('\parencite',                                 '\cite', locked=>1);
+DefMacro('\Parencite',                                 '\cite', locked=>1);
+DefMacro('\Cite',                                      '\cite', locked=>1);
+DefMacro('\citet OptionalMatch:* [][] Semiverbatim',   '\cite[#2 ]{#4}',locked=>1);
+DefMacro('\citep OptionalMatch:* [][] Semiverbatim',   '\cite[#2]{#4}', locked=>1);
+DefMacro('\citealt OptionalMatch:* [][] Semiverbatim', '\cite[#2]{#4}', locked=>1);
+DefMacro('\citealp OptionalMatch:* [][] Semiverbatim', '\cite[#2]{#4}', locked=>1);
+DefMacro('\citenum',                                   '\cite', locked=>1);
+DefMacro('\citem',                                     '\cite', locked=>1);            # see 1606.07864
+DefMacro('\autocite OptionalMatch:* [][]{}',           '\cite[#2]{#4}', locked=>1);
+DefMacro('\Autocite OptionalMatch:* [][]{}',           '\cite[#2]{#4}', locked=>1);
+DefMacro('\fullcite',                                  '\cite', locked=>1);
+DefMacro('\footcite',                                  '\cite', locked=>1);
+DefMacro('\footcitetext',                              '\cite', locked=>1);
+DefMacro('\smartcite',                                 '\cite', locked=>1);
+DefMacro('\textcite',                                  '\cite', locked=>1);
+DefMacro('\Textcite',                                  '\cite', locked=>1);
+DefMacro('\supercite',                                 '\cite', locked=>1);
+DefMacro('\citeauthor',                                '\cite', locked=>1);
+DefMacro('\citetitle',                                 '\cite', locked=>1);
 
 # TODO: These require custom parsing code, deferred.
 #DefMacro('\parencites []{}[][]{}[][]{}','');

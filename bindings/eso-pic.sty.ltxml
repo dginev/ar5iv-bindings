@@ -10,9 +10,8 @@ use warnings;
 use LaTeXML::Package;
 
 #======================================================================
-RequirePackage('color');
-RequirePackage('keyval');
 RequirePackage('xcolor');
+RequirePackage('keyval');
 #RequirePackage('eepic');
 #  /--------------------------------------------------------------------\
 # | INCOMPLETE IMPLEMENTATION                                           |
