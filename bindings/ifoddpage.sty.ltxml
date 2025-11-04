@@ -1,0 +1,21 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# | ifoddpage.sty                                                       | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | NOT Part of LaTeXML:                                                | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#======================================================================
+DefMacro('\checkoddpage', Tokens());
+DefConditional('\ifoddpage');
+DefConditional('\ifoddpageoroneside');
+DefRegister('\thecheckoddpage', Number(0));
+#======================================================================
+1;
