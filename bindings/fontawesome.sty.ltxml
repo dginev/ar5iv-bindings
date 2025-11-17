@@ -1,0 +1,25 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# | fontawesome.sty                                                     | #
+# | Implementation for LaTeXML (HTML-only !)                            | #
+# |=====================================================================| #
+
+# TODO: Add support for any differences specific to fontawesome.sty.
+#       For now just tie with fontawesome5.sty
+#=======================================================================#
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+RequirePackage('fontawesome5');
+
+#**********************************************************************
+
+DefMacro('\faStarO', '\faStar[regular]');
+DefMacro('\faSunO', '\faSun[regular]');
+DefMacro('\faMoonO', '\faMoon[regular]');
+
+#**********************************************************************
+1;
