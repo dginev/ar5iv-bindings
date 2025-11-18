@@ -22,7 +22,7 @@ RequirePackage('xparse');
 our $FONTAWESOME5_CDN_CSS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css';
 RequireResource($FONTAWESOME5_CDN_CSS_URL, type=>'text/css');
 
-DefConstructor('\faIcon[]{}', '<ltx:rawhtml><xhtml:i aria:hidden="true" class="fas fa-#2"></xhtml:i></ltx:rawhtml>');
+DefConstructor('\faIcon[]{}', '<ltx:inline-block aria:hidden="true" class="fas fa-#2"></ltx:inline-block>');
 
 DefMacro('\faAccessibleIcon []','\faIcon[#1]{accessible-icon}');
 DefMacro('\faAccusoft []','\faIcon[#1]{accusoft}');
