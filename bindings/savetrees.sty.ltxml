@@ -1,0 +1,31 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# | savetrees.sty                                                       | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | NOT Part of LaTeXML:                                                | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#======================================================================
+RequirePackage('ifluatex');
+# No effect from ifpdf.sty
+RequirePackage('xkeyval');
+RequirePackage('microtype');
+
+#  /--------------------------------------------------------------------\
+# | INCOMPLETE IMPLEMENTATION                                            |
+# | remove this comment, when done.                                      |
+#  \--------------------------------------------------------------------/
+DefMacro('\bibfont','\normalfont\small');
+DefMacro('\bibsetup',Tokens());
+DefMacro('\markeverypar',Tokens());
+DefMacro('\savetreesbibnote{}','#1');
+#======================================================================
+1;
