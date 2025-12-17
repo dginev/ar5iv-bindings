@@ -22,6 +22,16 @@ AssignValue('MAX_WARNINGS', 10_000, 'global');
 # No \today, useful when re-converting older archival articles
 DefMacroI('\today', undef, '\relax', locked => 1, scope => 'global');
 
+# We avoid the default resources but want to keep any remote web resources,
+#    so --nodefaultresources isn't sufficient. Instead, remove the ones we know we don't want.
+
+DefRewrite(xpath => 'descendant-or-self::ltx:resource', replace => sub {
+  my ($self, $node) = @_;
+  my $src = $node->getAttribute('src') || '';
+  return if $src !~ /^http/;    # Keep remote resources, remove all others
+  $self->getNode->appendChild($node);
+});
+
 # The following is an anti-pattern (monkey patching),
 #  required due to no official support having been negotiated yet.
 #
