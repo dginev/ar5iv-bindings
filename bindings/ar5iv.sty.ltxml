@@ -11,10 +11,10 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
-RequirePackage('latexml');
-PassOptions('latexml', 'sty', "ids", "rawstyles", "bibconfig={bbl,bib}",
+PassOptions('latexml', 'sty', "ids", "rawstyles", "bibconfig=bbl,bib",
  'nobreakuntex', 'magnify=1.2', 'zoomout=1.2', 'tokenlimit=249999999',
  'iflimit=3999999', 'absorblimit=1299999', 'pushbacklimit=599999');
+RequirePackage('latexml');
 
 # Practical maximum for warnings (avoid infinite loops overflowing the log file)
 AssignValue('MAX_WARNINGS', 10_000, 'global');
