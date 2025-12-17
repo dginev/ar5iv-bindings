@@ -1,0 +1,15 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# | luatexbase.sty                                                      | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+Warn('missing_file', 'luatexbase.sty', $STATE->getStomach->getGullet,
+  'luatexbase.sty is not yet supported, skipping.');
+
+1;

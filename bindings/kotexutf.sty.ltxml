@@ -1,0 +1,15 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# | kotexutf.sty                                                        | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+Warn('missing_file', 'kotexutf.sty', $STATE->getStomach->getGullet,
+  'kotexutf.sty is not yet supported, skipping.');
+
+1;
