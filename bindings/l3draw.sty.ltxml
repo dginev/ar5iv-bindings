@@ -1,0 +1,22 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# | l3draw.sty                                                          | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+Warn('missing_file', 'l3draw.sty', $STATE->getStomach->getGullet,
+  'l3draw.sty is not supported and will not be interpreted raw.');
+
+#**********************************************************************
+
+DefMacroI(T_CS('\draw_begin:'), undef, sub {
+  $_[0]->readUntil(T_CS('\draw_end:'));
+  return Invocation(T_CS('\lx@ERROR'), T_OTHER('l3draw'), T_OTHER('missing drawing'))->unlist; });
+
+1;
