@@ -1,0 +1,8 @@
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+
+# Nothing to do here for now, just a stub;
+
+1;
+#**********************************************************************
