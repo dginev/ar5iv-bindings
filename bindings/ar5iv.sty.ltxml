@@ -20,7 +20,9 @@ RequirePackage('latexml');
 AssignValue('MAX_WARNINGS', 10_000, 'global');
 
 # No \today, useful when re-converting older archival articles
-DefMacroI('\today', undef, '\relax', locked => 1, scope => 'global');
+AtBeginDocument(sub {
+  DefMacroI('\today', undef, '\relax', locked => 1, scope => 'global');
+});
 
 # We avoid the default resources but want to keep any remote web resources,
 #    so --nodefaultresources isn't sufficient. Instead, remove the ones we know we don't want.
