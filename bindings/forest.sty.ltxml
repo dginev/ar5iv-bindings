@@ -1,0 +1,59 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  forest.sty                                                         | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+RequirePackage('tikz');
+RequirePackage('etoolbox');
+# RequirePackage('environ');
+# RequirePackage('xparse');
+# RequirePackage('inlinedef');
+
+#**********************************************************************
+
+Warn('missing_file', 'forest.sty', $STATE->getStomach->getGullet, 'forest.sty is not implemented and will not be interpreted raw.');
+
+#**********************************************************************
+
+# Forbid loading this package, even locally, until we get good enough at
+# reusing the internals for good SVG
+#InputDefinitions('forest', type => 'sty', noltxml => 1);
+
+our %discarded_env_error_report = ();
+
+sub discard_env_body {
+  my ($stomach, $kind) = @_;
+  my $gullet = $stomach->getGullet;
+  $stomach->bgroup;
+  if (!$discarded_env_error_report{$kind}) {
+    $discarded_env_error_report{$kind} = 1;
+    Error('undefined', '{' . $kind . '}', $gullet,
+      $kind . ' has no support in forest.sty.ltxml, this is a stub binding.'); }
+  # discard contents;
+  while (my $upto_end = $gullet->readUntil(T_CS('\end'))) {
+    my $drop_open = $gullet->readToken;
+    my $env       = $gullet->readBalanced;
+    last if ToString($env) eq $kind; }
+  $stomach->egroup;
+  return; }
+
+DefConstructorI(T_CS('\begin{forest}'), undef, '<ltx:ERROR>{forest}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'forest') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endforest', '\relax');
+
+DefMacro('\forestset{}', '\relax');
+DefMacro('\forestoption{}', '\relax');
+DefMacro('\foresteoption{}', '\relax');
+DefMacro('\forestregister{}', '\relax');
+DefMacro('\foresteregister{}', '\relax');
+#**********************************************************************
+
+1;
