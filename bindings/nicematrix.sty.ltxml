@@ -1,0 +1,128 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# | nicematrix.sty                                                      | #
+# | Implementation for LaTeXML (stub)                                   | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+RequirePackage('pgfcore');
+RequirePackage('amsmath');
+RequirePackage('array');
+
+Warn('missing_file', 'nicematrix.sty', $STATE->getStomach->getGullet,
+  'nicematrix.sty is not implemented and will not be interpreted raw.');
+#**********************************************************************
+
+# Forbid loading this package, even locally, until we get good enough at
+# reusing the internals for good SVG
+#InputDefinitions('nicematrix', type => 'sty', noltxml => 1);
+
+our %discarded_env_error_report = ();
+
+sub discard_env_body {
+  my ($stomach, $kind) = @_;
+  my $gullet = $stomach->getGullet;
+  $stomach->bgroup;
+  if (!$discarded_env_error_report{$kind}) {
+    $discarded_env_error_report{$kind} = 1;
+    Error('undefined', '{' . $kind . '}', $gullet,
+      $kind . ' has no support in nicematrix.sty.ltxml, this is a stub binding.'); }
+  # discard contents;
+  while (my $upto_end = $gullet->readUntil(T_CS('\end'))) {
+    my $drop_open = $gullet->readToken;
+    my $env       = $gullet->readBalanced;
+    last if ToString($env) eq $kind; }
+  $stomach->egroup;
+  return; }
+
+DefConstructorI(T_CS('\begin{NiceTabular}'), undef, '<ltx:ERROR>{NiceTabular}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'NiceTabular') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endNiceTabular', '\relax', locked => 1);
+DefConstructorI(T_CS('\begin{NiceArray}'), undef, '<ltx:ERROR>{NiceArray}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'NiceArray') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endNiceArray', '\relax', locked => 1);
+DefConstructorI(T_CS('\begin{NiceMatrix}'), undef, '<ltx:ERROR>{NiceMatrix}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'NiceMatrix') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endNiceMatrix', '\relax', locked => 1);
+DefConstructorI(T_CS('\begin{NiceArrayWithDelims}'), undef, '<ltx:ERROR>{NiceArrayWithDelims}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'NiceArrayWithDelims') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endNiceArrayWithDelims', '\relax', locked => 1);
+DefConstructorI(T_CS('\begin{NiceTabular*}'), undef, '<ltx:ERROR>{NiceTabular*}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'NiceTabular*') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endNiceTabular', '\relax', locked => 1);
+DefConstructorI(T_CS('\begin{pNiceArray}'), undef, '<ltx:ERROR>{pNiceArray}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'pNiceArray') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endpNiceArray', '\relax', locked => 1);
+DefConstructorI(T_CS('\begin{pNiceMatrix}'), undef, '<ltx:ERROR>{pNiceMatrix}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'pNiceMatrix') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endpNiceMatrix', '\relax', locked => 1);
+
+DefConstructorI(T_CS('\begin{NiceTabularX}'), undef, '<ltx:ERROR>{NiceTabularX}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'NiceTabularX') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endNiceTabularX', '\relax', locked => 1);
+DefConstructorI(T_CS('\begin{bNiceArray}'), undef, '<ltx:ERROR>{bNiceArray}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'bNiceArray') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endbNiceArray', '\relax', locked => 1);
+DefConstructorI(T_CS('\begin{bNiceMatrix}'), undef, '<ltx:ERROR>{bNiceMatrix}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'bNiceMatrix') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endbNiceMatrix', '\relax', locked => 1);
+
+DefConstructorI(T_CS('\begin{BNiceArray}'), undef, '<ltx:ERROR>{BNiceArray}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'BNiceArray') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endBNiceArray', '\relax', locked => 1);
+DefConstructorI(T_CS('\begin{BNiceMatrix}'), undef, '<ltx:ERROR>{BNiceMatrix}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'BNiceMatrix') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endBNiceMatrix', '\relax', locked => 1);
+
+DefConstructorI(T_CS('\begin{vNiceArray}'), undef, '<ltx:ERROR>{vNiceArray}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'vNiceArray') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endvNiceArray', '\relax', locked => 1);
+DefConstructorI(T_CS('\begin{vNiceMatrix}'), undef, '<ltx:ERROR>{vNiceMatrix}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'vNiceMatrix') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endvNiceMatrix', '\relax', locked => 1);
+
+DefConstructorI(T_CS('\begin{VNiceArray}'), undef, '<ltx:ERROR>{VNiceArray}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'VNiceArray') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endVNiceArray', '\relax', locked => 1);
+DefConstructorI(T_CS('\begin{VNiceMatrix}'), undef, '<ltx:ERROR>{VNiceMatrix}</ltx:ERROR>',
+  beforeDigest => sub { discard_env_body($_[0], 'VNiceMatrix') },
+  mode         => 'text',
+  locked       => 1);
+DefMacro('\endVNiceMatrix', '\relax', locked => 1);
+
+1;
