@@ -1,0 +1,22 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# | MnSymbol.sty                                                        | #
+# | Implementation for LaTeXML (stub)                                   | #
+# |=====================================================================| #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+RequirePackage('textcomp');
+RequirePackage('eufrak');
+RequirePackage('amsmath');
+
+Let('\slimits@', '\nolimits');
+
+Warn('missing_file', 'MnSymbol.sty', $STATE->getStomach->getGullet,
+  'MnSymbol.sty is not implemented and will not be interpreted raw.');
+
+1;
