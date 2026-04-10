@@ -18,7 +18,7 @@ Warn('missing_file', 'biblatex.sty', $STATE->getStomach->getGullet,
 
 DefKeyVal('biblatex', 'maxbibnames', 'Number', '4', code => sub {
     $STATE->assignValue('biblatex_maxbibnames' => int(ToString($_[1])), 'global'); });
-DefKeyVal('biblatex', 'style', '', '', code => sub {
+DefKeyVal('biblatex', 'style', 'Semiverbatim', undef, code => sub {
     my $style = ToString($_[1]);
     if ($style =~ /authoryear|apa/) {
         AssignValue('CITE_STYLE' => 'authoryear', 'global');
@@ -41,16 +41,14 @@ RequirePackage('babel_support');
 # Default citation punctuation (same as natbib defaults).
 # These are only set if not already defined, so natbib or other packages
 # can override them if loaded first.
-AssignValue('CITE_OPEN'  => Tokens(), 'global')
-    unless LookupValue('CITE_OPEN');
-AssignValue('CITE_CLOSE' => Tokens(), 'global')
-    unless LookupValue('CITE_CLOSE');
-AssignValue('CITE_SEPARATOR' => T_OTHER(';'), 'global')
-    unless LookupValue('CITE_SEPARATOR');
-AssignValue('CITE_NOTE_SEPARATOR' => T_OTHER(','), 'global')
-    unless LookupValue('CITE_NOTE_SEPARATOR');
-AssignValue('CITE_AY_SEPARATOR' => T_OTHER(','), 'global')
-    unless LookupValue('CITE_AY_SEPARATOR');
+# Biblatex replaces the entire citation system, so set its own defaults
+# unconditionally.  The style option handler (above) or companion packages
+# can override these later.
+AssignValue('CITE_OPEN'           => Tokens(T_OTHER('(')), 'global');
+AssignValue('CITE_CLOSE'          => Tokens(T_OTHER(')')), 'global');
+AssignValue('CITE_SEPARATOR'      => T_OTHER(';'), 'global');
+AssignValue('CITE_NOTE_SEPARATOR' => T_OTHER(','), 'global');
+AssignValue('CITE_AY_SEPARATOR'   => T_OTHER(','), 'global');
 
 # ---------------------------------------------------------------------------
 # Helper: standard pre/post-note handling for biblatex two-optional-arg
@@ -59,6 +57,19 @@ AssignValue('CITE_AY_SEPARATOR' => T_OTHER(','), 'global')
 # This mirrors natbib's convention (line 113 of natbib.sty.ltxml).
 # ---------------------------------------------------------------------------
 
+# -- style guard: fall back to plain \cite for non-authoryear styles --------
+# Full numeric/superscript citation support is not yet implemented.
+# When the style is not authoryear, delegate to LaTeXML's built-in \cite
+# so that numeric documents are not silently misrendered as author-year.
+sub _cite_fallback {
+    my ($post, $keys) = @_;
+    if ($post && !IsEmpty($post)) {
+        Invocation(T_CS('\cite'), $post, $keys); }
+    else {
+        Invocation(T_CS('\cite'), undef, $keys); } }
+
+sub _is_authoryear { return (LookupValue('CITE_STYLE') || '') eq 'authoryear'; }
+
 # -- parenthetical citations: (prenote Author, Year, postnote) -------------
 #    Used by \parencite, \autocite, \citep, \citealp (without parens).
 sub _cite_parenthetical {
@@ -66,18 +77,19 @@ sub _cite_parenthetical {
     if (!$post) { ($pre, $post) = (undef, $pre); }
     $pre  = undef if IsEmpty($pre);
     $post = undef if IsEmpty($post);
+    return _cite_fallback($post, $keys) unless _is_authoryear();
     my ($open, $close, $ns, $ay)
       = map { LookupValue($_) } qw(CITE_OPEN CITE_CLOSE CITE_NOTE_SEPARATOR CITE_AY_SEPARATOR);
     my $author = ($star ? "FullAuthors" : "Authors");
     Invocation(T_CS('\@@cite'),
         Tokens(Explode('citep')),
-        Tokens(T_OTHER('('), ($pre ? ($pre, T_SPACE) : ()),
+        Tokens($open->unlist, ($pre ? ($pre, T_SPACE) : ()),
             Invocation(T_CS('\@@bibref'),
                 Tokens(Explode("${author}Phrase1Year")),
                 $keys,
                 Invocation(T_CS('\@@citephrase'), Tokens($ay->unlist, T_SPACE)),
                 undef),
-            ($post ? ($ns, T_SPACE, $post) : ()), T_OTHER(')'))); }
+            ($post ? ($ns, T_SPACE, $post) : ()), $close->unlist)); }
 
 # -- textual citations: prenote Author (Year, postnote) --------------------
 #    Used by \textcite, \citet.
@@ -86,6 +98,7 @@ sub _cite_textual {
     if (!$post) { ($pre, $post) = (undef, $pre); }
     $pre  = undef if IsEmpty($pre);
     $post = undef if IsEmpty($post);
+    return _cite_fallback($post, $keys) unless _is_authoryear();
     my ($open, $close, $ns)
       = map { LookupValue($_) } qw(CITE_OPEN CITE_CLOSE CITE_NOTE_SEPARATOR);
     my $author = ($star ? "FullAuthors" : "Authors");
@@ -95,9 +108,9 @@ sub _cite_textual {
             Tokens(Explode("$author Phrase1YearPhrase2")),
             $keys,
             Invocation(T_CS('\@@citephrase'),
-                Tokens(T_OTHER('('), ($pre ? ($pre, T_SPACE) : ()))),
+                Tokens($open->unlist, ($pre ? ($pre, T_SPACE) : ()))),
             Invocation(T_CS('\@@citephrase'),
-                Tokens(($post ? ($ns, T_SPACE, $post) : ()), T_OTHER(')'))))); }
+                Tokens(($post ? ($ns, T_SPACE, $post) : ()), $close->unlist)))); }
 
 # -- bare citations (no parens): prenote Author, Year, postnote ------------
 #    Used by \cite, \Cite, \citealt, \fullcite, \smartcite, \footcite, etc.
@@ -106,6 +119,7 @@ sub _cite_bare {
     if (!$post) { ($pre, $post) = (undef, $pre); }
     $pre  = undef if IsEmpty($pre);
     $post = undef if IsEmpty($post);
+    return _cite_fallback($post, $keys) unless _is_authoryear();
     my ($ns, $ay) = map { LookupValue($_) } qw(CITE_NOTE_SEPARATOR CITE_AY_SEPARATOR);
     my $author = ($star ? "FullAuthors" : "Authors");
     if ($pre || $post) {
@@ -128,28 +142,32 @@ sub _cite_bare {
                 undef)); } }
 
 # -- Parenthetical commands ------------------------------------------------
-DefMacro('\parencite OptionalMatch:* [][] Semiverbatim', \&_cite_parenthetical);
-DefMacro('\Parencite OptionalMatch:* [][] Semiverbatim', \&_cite_parenthetical);
-DefMacro('\autocite  OptionalMatch:* [][] Semiverbatim', \&_cite_parenthetical);
-DefMacro('\Autocite  OptionalMatch:* [][] Semiverbatim', \&_cite_parenthetical);
-DefMacro('\citep     OptionalMatch:* [][] Semiverbatim', \&_cite_parenthetical);
+DefMacro('\parencite OptionalMatch:* [][] Semiverbatim', \&_cite_parenthetical, locked=>1);
+DefMacro('\Parencite OptionalMatch:* [][] Semiverbatim', \&_cite_parenthetical, locked=>1);
+DefMacro('\autocite  OptionalMatch:* [][] Semiverbatim', \&_cite_parenthetical, locked=>1);
+DefMacro('\Autocite  OptionalMatch:* [][] Semiverbatim', \&_cite_parenthetical, locked=>1);
+DefMacro('\citep     OptionalMatch:* [][] Semiverbatim', \&_cite_parenthetical, locked=>1);
 
 # -- Textual commands ------------------------------------------------------
-DefMacro('\textcite  OptionalMatch:* [][] Semiverbatim', \&_cite_textual);
-DefMacro('\Textcite  OptionalMatch:* [][] Semiverbatim', \&_cite_textual);
-DefMacro('\citet     OptionalMatch:* [][] Semiverbatim', \&_cite_textual);
+DefMacro('\textcite  OptionalMatch:* [][] Semiverbatim', \&_cite_textual, locked=>1);
+DefMacro('\Textcite  OptionalMatch:* [][] Semiverbatim', \&_cite_textual, locked=>1);
+DefMacro('\citet     OptionalMatch:* [][] Semiverbatim', \&_cite_textual, locked=>1);
 
 # -- Bare / no-parens commands ---------------------------------------------
-DefMacro('\Cite         OptionalMatch:* [][] Semiverbatim', \&_cite_bare);
-DefMacro('\citealt      OptionalMatch:* [][] Semiverbatim', \&_cite_bare);
-DefMacro('\citealp      OptionalMatch:* [][] Semiverbatim', \&_cite_bare);
-DefMacro('\fullcite     OptionalMatch:* [][] Semiverbatim', \&_cite_bare);
-DefMacro('\footcite     OptionalMatch:* [][] Semiverbatim', \&_cite_bare);
-DefMacro('\footcitetext OptionalMatch:* [][] Semiverbatim', \&_cite_bare);
-DefMacro('\smartcite    OptionalMatch:* [][] Semiverbatim', \&_cite_bare);
-DefMacro('\supercite    OptionalMatch:* [][] Semiverbatim', \&_cite_bare);
-DefMacro('\citenum      OptionalMatch:* [][] Semiverbatim', \&_cite_bare);
-DefMacro('\citem        OptionalMatch:* [][] Semiverbatim', \&_cite_bare);
+DefMacro('\Cite         OptionalMatch:* [][] Semiverbatim', \&_cite_bare, locked=>1);
+DefMacro('\citealt      OptionalMatch:* [][] Semiverbatim', \&_cite_bare, locked=>1);
+DefMacro('\citealp      OptionalMatch:* [][] Semiverbatim', \&_cite_bare, locked=>1);
+DefMacro('\fullcite     OptionalMatch:* [][] Semiverbatim', \&_cite_bare, locked=>1);
+# TODO: \footcite should render inside a footnote, \footcitetext likewise.
+#   Currently stubbed as bare inline citations (same as pre-PR behavior).
+DefMacro('\footcite     OptionalMatch:* [][] Semiverbatim', \&_cite_bare, locked=>1);
+DefMacro('\footcitetext OptionalMatch:* [][] Semiverbatim', \&_cite_bare, locked=>1);
+DefMacro('\smartcite    OptionalMatch:* [][] Semiverbatim', \&_cite_bare, locked=>1);
+# TODO: \supercite should render as a superscript number.
+#   Currently stubbed as a bare inline citation (same as pre-PR behavior).
+DefMacro('\supercite    OptionalMatch:* [][] Semiverbatim', \&_cite_bare, locked=>1);
+DefMacro('\citenum      OptionalMatch:* [][] Semiverbatim', \&_cite_bare, locked=>1);
+DefMacro('\citem        OptionalMatch:* [][] Semiverbatim', \&_cite_bare, locked=>1);
 
 # -- Author/title/year-only commands --------------------------------------
 DefMacro('\citeauthor OptionalMatch:* [][] Semiverbatim', sub {
@@ -157,50 +175,55 @@ DefMacro('\citeauthor OptionalMatch:* [][] Semiverbatim', sub {
     if (!$post) { ($pre, $post) = (undef, $pre); }
     $pre  = undef if IsEmpty($pre);
     $post = undef if IsEmpty($post);
+    return _cite_fallback($post, $keys) unless _is_authoryear();
     my $ns     = LookupValue('CITE_NOTE_SEPARATOR');
     my $author = ($star ? "FullAuthors" : "Authors");
     Invocation(T_CS('\@@cite'),
         Tokens(Explode('citeauthor')),
         Tokens(($pre ? ($pre, T_SPACE) : ()),
             Invocation(T_CS('\@@bibref'), Tokens(Explode($author)), $keys, undef, undef),
-            ($post ? ($ns, T_SPACE, $post) : ()))); });
+            ($post ? ($ns, T_SPACE, $post) : ()))); }, locked=>1);
 
 DefMacro('\citetitle OptionalMatch:* [][] Semiverbatim', sub {
     my ($gullet, $star, $pre, $post, $keys) = @_;
     if (!$post) { ($pre, $post) = (undef, $pre); }
     $pre  = undef if IsEmpty($pre);
     $post = undef if IsEmpty($post);
+    return _cite_fallback($post, $keys) unless _is_authoryear();
     my $ns = LookupValue('CITE_NOTE_SEPARATOR');
     Invocation(T_CS('\@@cite'),
         Tokens(Explode('citetitle')),
         Tokens(($pre ? ($pre, T_SPACE) : ()),
             Invocation(T_CS('\@@bibref'), Tokens(Explode("Title")), $keys, undef, undef),
-            ($post ? ($ns, T_SPACE, $post) : ()))); });
+            ($post ? ($ns, T_SPACE, $post) : ()))); }, locked=>1);
 
 DefMacro('\citeyear OptionalMatch:* [][] Semiverbatim', sub {
     my ($gullet, $star, $pre, $post, $keys) = @_;
     if (!$post) { ($pre, $post) = (undef, $pre); }
     $pre  = undef if IsEmpty($pre);
     $post = undef if IsEmpty($post);
+    return _cite_fallback($post, $keys) unless _is_authoryear();
     my $ns = LookupValue('CITE_NOTE_SEPARATOR');
     Invocation(T_CS('\@@cite'),
         Tokens(Explode('citeyear')),
         Tokens(($pre ? ($pre, T_SPACE) : ()),
             Invocation(T_CS('\@@bibref'), Tokens(Explode("Year")), $keys, undef, undef),
-            ($post ? ($ns, T_SPACE, $post) : ()))); });
+            ($post ? ($ns, T_SPACE, $post) : ()))); }, locked=>1);
 
 DefMacro('\citeyearpar OptionalMatch:* [][] Semiverbatim', sub {
     my ($gullet, $star, $pre, $post, $keys) = @_;
     if (!$post) { ($pre, $post) = (undef, $pre); }
     $pre  = undef if IsEmpty($pre);
     $post = undef if IsEmpty($post);
-    my $ns = LookupValue('CITE_NOTE_SEPARATOR');
+    return _cite_fallback($post, $keys) unless _is_authoryear();
+    my ($open, $close, $ns)
+      = map { LookupValue($_) } qw(CITE_OPEN CITE_CLOSE CITE_NOTE_SEPARATOR);
     Invocation(T_CS('\@@cite'),
         Tokens(Explode('citeyearpar')),
-        Tokens(T_OTHER('('), ($pre ? ($pre, T_SPACE) : ()),
+        Tokens($open->unlist, ($pre ? ($pre, T_SPACE) : ()),
             Invocation(T_CS('\@@bibref'), Tokens(Explode("Year")), $keys, undef, undef),
             ($post ? ($ns, T_SPACE, $post) : ()),
-            T_OTHER(')'))); });
+            $close->unlist)); }, locked=>1);
 
 # -- Multicite commands: \parencites, \textcites, \autocites, etc. ----------
 # These accept repeated [pre][post]{keys} groups.  We greedily read groups
@@ -220,7 +243,7 @@ sub _read_multicite_groups {
             $gullet->unread($next);
             my $keys = $gullet->readArg;          # reads {keys}
             push @groups, [undef, undef, $keys];
-        } elsif (ToString($next) eq '[') {        # optional arg starts
+        } elsif (ToString($next) eq '[') {        # optional arg starts (string check consistent with LaTeXML internals)
             $gullet->unread($next);
             my $opt1 = $gullet->readOptional;
             my $opt2 = $gullet->readOptional;
@@ -242,9 +265,13 @@ sub _read_multicite_groups {
 sub _multicite_parenthetical {
     my ($gullet, $star) = @_;
     my @groups = _read_multicite_groups($gullet);
-    # Fall back: if no groups were found, return empty
     return () unless @groups;
-    my ($ns, $ay) = map { LookupValue($_) } qw(CITE_NOTE_SEPARATOR CITE_AY_SEPARATOR);
+    unless (_is_authoryear()) {
+        # Non-authoryear: join all keys and delegate to \cite
+        my $all_keys = Tokens(map { @{$$_[2]} } @groups);
+        return _cite_fallback(undef, $all_keys); }
+    my ($open, $close, $ns, $ay)
+      = map { LookupValue($_) } qw(CITE_OPEN CITE_CLOSE CITE_NOTE_SEPARATOR CITE_AY_SEPARATOR);
     my $author = ($star ? "FullAuthors" : "Authors");
     my @parts;
     for my $g (@groups) {
@@ -267,12 +294,15 @@ sub _multicite_parenthetical {
     }
     Invocation(T_CS('\@@cite'),
         Tokens(Explode('citep')),
-        Tokens(T_OTHER('('), @body, T_OTHER(')'))); }
+        Tokens($open->unlist, @body, $close->unlist)); }
 
 sub _multicite_textual {
     my ($gullet, $star) = @_;
     my @groups = _read_multicite_groups($gullet);
     return () unless @groups;
+    unless (_is_authoryear()) {
+        my $all_keys = Tokens(map { @{$$_[2]} } @groups);
+        return _cite_fallback(undef, $all_keys); }
     my ($open, $close, $ns) = map { LookupValue($_) } qw(CITE_OPEN CITE_CLOSE CITE_NOTE_SEPARATOR);
     my $author = ($star ? "FullAuthors" : "Authors");
     my @parts;
@@ -297,12 +327,45 @@ sub _multicite_textual {
         Tokens(Explode('citet')),
         Tokens(@body)); }
 
-DefMacro('\parencites OptionalMatch:*', sub { _multicite_parenthetical($_[0], $_[1]); });
-DefMacro('\Parencites OptionalMatch:*', sub { _multicite_parenthetical($_[0], $_[1]); });
-DefMacro('\autocites  OptionalMatch:*', sub { _multicite_parenthetical($_[0], $_[1]); });
-DefMacro('\Autocites  OptionalMatch:*', sub { _multicite_parenthetical($_[0], $_[1]); });
-DefMacro('\textcites  OptionalMatch:*', sub { _multicite_textual($_[0], $_[1]); });
-DefMacro('\Textcites  OptionalMatch:*', sub { _multicite_textual($_[0], $_[1]); });
+sub _multicite_bare {
+    my ($gullet, $star) = @_;
+    my @groups = _read_multicite_groups($gullet);
+    return () unless @groups;
+    unless (_is_authoryear()) {
+        my $all_keys = Tokens(map { @{$$_[2]} } @groups);
+        return _cite_fallback(undef, $all_keys); }
+    my ($ns, $ay) = map { LookupValue($_) } qw(CITE_NOTE_SEPARATOR CITE_AY_SEPARATOR);
+    my $author = ($star ? "FullAuthors" : "Authors");
+    my @parts;
+    for my $g (@groups) {
+        my ($pre, $post, $keys) = @$g;
+        my @toks;
+        push @toks, $pre, T_SPACE if $pre;
+        push @toks, Invocation(T_CS('\@@bibref'),
+            Tokens(Explode("${author}Phrase1Year")),
+            $keys,
+            Invocation(T_CS('\@@citephrase'), Tokens($ay->unlist, T_SPACE)),
+            undef);
+        push @toks, $ns, T_SPACE, $post if $post;
+        push @parts, \@toks;
+    }
+    my @body;
+    for my $i (0 .. $#parts) {
+        push @body, T_OTHER(';'), T_SPACE if $i > 0;
+        push @body, @{$parts[$i]};
+    }
+    Invocation(T_CS('\@@cite'),
+        Tokens(Explode('cite')),
+        Tokens(@body)); }
+
+DefMacro('\cites      OptionalMatch:*', sub { _multicite_bare($_[0], $_[1]); }, locked=>1);
+DefMacro('\Cites      OptionalMatch:*', sub { _multicite_bare($_[0], $_[1]); }, locked=>1);
+DefMacro('\parencites OptionalMatch:*', sub { _multicite_parenthetical($_[0], $_[1]); }, locked=>1);
+DefMacro('\Parencites OptionalMatch:*', sub { _multicite_parenthetical($_[0], $_[1]); }, locked=>1);
+DefMacro('\autocites  OptionalMatch:*', sub { _multicite_parenthetical($_[0], $_[1]); }, locked=>1);
+DefMacro('\Autocites  OptionalMatch:*', sub { _multicite_parenthetical($_[0], $_[1]); }, locked=>1);
+DefMacro('\textcites  OptionalMatch:*', sub { _multicite_textual($_[0], $_[1]); }, locked=>1);
+DefMacro('\Textcites  OptionalMatch:*', sub { _multicite_textual($_[0], $_[1]); }, locked=>1);
 
 DefMacro('\unspace',                '\relax');     # ?
 DefMacro('\blx@imc@resetpunctfont', '\relax');     # ?
