@@ -1,0 +1,34 @@
+% ascmac.sty — minimal local stub for the Japanese ascmac package.
+%
+% Real ascmac.sty (part of the jsclasses bundle in jsclasses/ASCII pTeX) ships
+% with Japanese TeX distributions, not standard TeX Live's `latex/` tree.
+% arXiv's compile cluster apparently has it via their texmf-extras; papers
+% from Japanese math/physics authors with `\usepackage{ascmac}` thus compile
+% there but fail through our pipeline. Vendor a minimal equivalent here so
+% the ar5iv/latexml pipeline can raw-load it via `--path=ar5iv-bindings/
+% originals` like other arXiv extras.
+%
+% Five environments observed in arxmliv: itembox, screen, shadebox, boxnote,
+% keytop. For HTML output the visual "boxed-item" presentation is moot — we
+% pass the content through as plain paragraphs with optional title.
+\ProvidesPackage{ascmac}[2026/05/15 minimal local stub]
+
+% \begin{itembox}[align]{title} ... \end{itembox} — title-labeled box.
+% Reduce to a small section-like heading + content paragraph.
+\newenvironment{itembox}[2][]{%
+  \par\medskip\noindent\textbf{#2}\par\medskip%
+}{\par\medskip}
+
+% \begin{screen} ... \end{screen} — single-bordered box. Pass-through.
+\newenvironment{screen}{\par\medskip}{\par\medskip}
+
+% \begin{shadebox} ... \end{shadebox} — shaded box. Pass-through.
+\newenvironment{shadebox}{\par\medskip}{\par\medskip}
+
+% \begin{boxnote} ... \end{boxnote} — note-style box. Pass-through.
+\newenvironment{boxnote}{\par\medskip}{\par\medskip}
+
+% \keytop{label} — typeset a key-cap. Just emit the label.
+\providecommand{\keytop}[1]{\textsf{#1}}
+
+\endinput
