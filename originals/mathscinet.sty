@@ -1,0 +1,16 @@
+% mathscinet.sty — minimal local stub for AMS MathSciNet's package.
+%
+% Real `mathscinet.sty` ships with the MathSciNet export tool, not TeX
+% Live. arXiv's compile cluster has it in their `texmf-extras` tree; we
+% vendor a minimal equivalent here so the ar5iv / latexml pipeline can
+% raw-load it via `--path=ar5iv-bindings/originals` like the other 80
+% extras we already mirror (harvmac, jnl, aip, etc.).
+%
+% Only \scr is observed in arXiv corpora; add other CSes here as
+% papers surface them.
+\ProvidesPackage{mathscinet}[2026/05/15 minimal local stub (\scr only)]
+
+\let\scr\mathcal
+\let\msnscr\mathcal
+
+\endinput
