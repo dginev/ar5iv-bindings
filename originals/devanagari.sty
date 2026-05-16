@@ -1,0 +1,17 @@
+% devanagari.sty — minimal local stub for the Devanagari (Sanskrit/Hindi)
+% typesetting package. The real devanagari.sty is part of the Velthuis
+% transliteration package, not shipped with standard TeX Live. arXiv's
+% compile cluster apparently has it via Indic-extras; papers from
+% Indian-language authors with `\usepackage{devanagari}` fail through our
+% pipeline.
+%
+% Two main consumers in arXmliv:
+%   \dn{...} — render Devanagari text from Velthuis romanization
+%   {\dn ...} — alternate brace-group form
+%
+% We can't render the actual Devanagari script in HTML/XML output via
+% font substitution alone. Just emit the romanized argument as-is so the
+% document structure is preserved.
+\ProvidesPackage{devanagari}[2026/05/15 minimal local stub]
+\providecommand{\dn}[1]{\textit{#1}}
+\endinput
