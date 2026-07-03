@@ -16,13 +16,29 @@ Warn('missing_file', 'biblatex.sty', $STATE->getStomach->getGullet,
 
 #**********************************************************************
 
+# NOTE: keyval `code` subs are installed as macro expansions (KeyVal.pm
+# defineOrdinary); their RETURN VALUE is expanded as tokens. Always end
+# with an explicit `return;` or non-Token returns trigger
+# "Error:misdefined: Expected a Token".
 DefKeyVal('biblatex', 'maxbibnames', 'Number', '4', code => sub {
-    $STATE->assignValue('biblatex_maxbibnames' => int(ToString($_[1])), 'global'); });
-DefKeyVal('biblatex', 'style', 'Semiverbatim', undef, code => sub {
-    my $style = ToString($_[1]);
-    if ($style =~ /authoryear|apa/) {
-        AssignValue('CITE_STYLE' => 'authoryear', 'global');
-    }});
+    $STATE->assignValue('biblatex_maxbibnames' => int(ToString($_[1])), 'global');
+    return; });
+# Author-year style detection (apa, authoryear, authoryear-comp, ...).
+# Only then do we activate the author-year citation commands below;
+# numeric/alphabetic documents keep LaTeXML's plain \cite behavior.
+sub _set_biblatex_style {
+  my $style = ToString($_[0]);
+  if ($style =~ /authoryear|apa/) {
+    AssignValue('CITE_STYLE' => 'authoryear', 'global');
+    # Author-year citation punctuation (the core defaults are numeric [ ]).
+    AssignValue('CITE_OPEN'           => Tokens(T_OTHER('(')), 'global');
+    AssignValue('CITE_CLOSE'          => Tokens(T_OTHER(')')), 'global');
+    AssignValue('CITE_SEPARATOR'      => T_OTHER(';'),         'global');
+    AssignValue('CITE_NOTE_SEPARATOR' => T_OTHER(','),         'global');
+    AssignValue('CITE_AY_SEPARATOR'   => T_OTHER(','),         'global'); }
+  return; }
+DefKeyVal('biblatex', 'style',     'Semiverbatim', undef, code => sub { _set_biblatex_style($_[1]); });
+DefKeyVal('biblatex', 'citestyle', 'Semiverbatim', undef, code => sub { _set_biblatex_style($_[1]); });
 DeclareOption(undef, sub { });    # ignore unrecognised options
 ProcessOptions(inorder => 1, keysets => ['biblatex']);
 
@@ -38,18 +54,6 @@ RequirePackage('babel_support');
 # own bibliography support hooked in.
 #InputDefinitions('biblatex', type => 'sty', noltxml => 1);
 
-# Default citation punctuation (same as natbib defaults).
-# These are only set if not already defined, so natbib or other packages
-# can override them if loaded first.
-# Biblatex replaces the entire citation system, so set its own defaults
-# unconditionally.  The style option handler (above) or companion packages
-# can override these later.
-AssignValue('CITE_OPEN'           => Tokens(T_OTHER('(')), 'global');
-AssignValue('CITE_CLOSE'          => Tokens(T_OTHER(')')), 'global');
-AssignValue('CITE_SEPARATOR'      => T_OTHER(';'), 'global');
-AssignValue('CITE_NOTE_SEPARATOR' => T_OTHER(','), 'global');
-AssignValue('CITE_AY_SEPARATOR'   => T_OTHER(','), 'global');
-
 # ---------------------------------------------------------------------------
 # Helper: standard pre/post-note handling for biblatex two-optional-arg
 # commands.  With one optional arg it is a postnote (e.g. page number);
@@ -61,12 +65,19 @@ AssignValue('CITE_AY_SEPARATOR'   => T_OTHER(','), 'global');
 # Full numeric/superscript citation support is not yet implemented.
 # When the style is not authoryear, delegate to LaTeXML's built-in \cite
 # so that numeric documents are not silently misrendered as author-year.
+# Save the core \cite: biblatex redefines \cite below, and the fallback
+# must delegate to the original, not recurse into our own definition.
+Let('\blx@saved@cite', '\cite');
+
+# NOTE: built by hand rather than via Invocation(T_CS('\blx@saved@cite'),...):
+# the core \cite is robust=>1, so the top-level \cite binding is a
+# parameterless protect-wrapper and Invocation would revert ZERO arguments,
+# silently dropping both the postnote and the keys.
 sub _cite_fallback {
     my ($post, $keys) = @_;
-    if ($post && !IsEmpty($post)) {
-        Invocation(T_CS('\cite'), $post, $keys); }
-    else {
-        Invocation(T_CS('\cite'), undef, $keys); } }
+    return Tokens(T_CS('\blx@saved@cite'),
+        ($post && !IsEmpty($post) ? (T_OTHER('['), $post->unlist, T_OTHER(']')) : ()),
+        T_BEGIN, $keys->unlist, T_END); }
 
 sub _is_authoryear { return (LookupValue('CITE_STYLE') || '') eq 'authoryear'; }
 
@@ -136,7 +147,7 @@ sub _cite_bare {
         Invocation(T_CS('\@@cite'),
             Tokens(Explode('cite')),
             Invocation(T_CS('\@@bibref'),
-                Tokens(Explode("$author Phrase1YearPhrase2")),
+                Tokens(Explode("${author}Phrase1Year")),
                 $keys,
                 Invocation(T_CS('\@@citephrase'), Tokens($ay->unlist, T_SPACE)),
                 undef)); } }
@@ -154,6 +165,9 @@ DefMacro('\Textcite  OptionalMatch:* [][] Semiverbatim', \&_cite_textual, locked
 DefMacro('\citet     OptionalMatch:* [][] Semiverbatim', \&_cite_textual, locked=>1);
 
 # -- Bare / no-parens commands ---------------------------------------------
+# In author-year styles \cite is "Author, Year" without parentheses;
+# in other styles it falls back to the saved core \cite.
+DefMacro('\cite         OptionalMatch:* [][] Semiverbatim', \&_cite_bare, locked=>1);
 DefMacro('\Cite         OptionalMatch:* [][] Semiverbatim', \&_cite_bare, locked=>1);
 DefMacro('\citealt      OptionalMatch:* [][] Semiverbatim', \&_cite_bare, locked=>1);
 DefMacro('\citealp      OptionalMatch:* [][] Semiverbatim', \&_cite_bare, locked=>1);
@@ -229,6 +243,16 @@ DefMacro('\citeyearpar OptionalMatch:* [][] Semiverbatim', sub {
 # These accept repeated [pre][post]{keys} groups.  We greedily read groups
 # from the gullet, build a \@@bibref for each, and join them with semicolons.
 
+# Join the keys of all groups into one comma-separated key list,
+# for delegation to a single \cite in the non-authoryear fallback.
+sub _joined_keys {
+    my (@groups) = @_;
+    my @toks;
+    for my $g (@groups) {
+        push @toks, T_OTHER(',') if @toks;
+        push @toks, $$g[2]->unlist; }
+    return Tokens(@toks); }
+
 sub _read_multicite_groups {
     my ($gullet) = @_;
     my @groups;
@@ -268,8 +292,7 @@ sub _multicite_parenthetical {
     return () unless @groups;
     unless (_is_authoryear()) {
         # Non-authoryear: join all keys and delegate to \cite
-        my $all_keys = Tokens(map { @{$$_[2]} } @groups);
-        return _cite_fallback(undef, $all_keys); }
+        return _cite_fallback(undef, _joined_keys(@groups)); }
     my ($open, $close, $ns, $ay)
       = map { LookupValue($_) } qw(CITE_OPEN CITE_CLOSE CITE_NOTE_SEPARATOR CITE_AY_SEPARATOR);
     my $author = ($star ? "FullAuthors" : "Authors");
@@ -301,21 +324,20 @@ sub _multicite_textual {
     my @groups = _read_multicite_groups($gullet);
     return () unless @groups;
     unless (_is_authoryear()) {
-        my $all_keys = Tokens(map { @{$$_[2]} } @groups);
-        return _cite_fallback(undef, $all_keys); }
+        return _cite_fallback(undef, _joined_keys(@groups)); }
     my ($open, $close, $ns) = map { LookupValue($_) } qw(CITE_OPEN CITE_CLOSE CITE_NOTE_SEPARATOR);
     my $author = ($star ? "FullAuthors" : "Authors");
     my @parts;
     for my $g (@groups) {
         my ($pre, $post, $keys) = @$g;
-        my @toks;
-        push @toks, $pre, T_SPACE if $pre;
-        push @toks, Invocation(T_CS('\@@bibref'),
+        # Same phrase layout as _cite_textual: "Author (pre year, post)".
+        my @toks = Invocation(T_CS('\@@bibref'),
             Tokens(Explode("$author Phrase1YearPhrase2")),
             $keys,
-            Invocation(T_CS('\@@citephrase'), Tokens(T_SPACE)),
-            undef);
-        push @toks, $ns, T_SPACE, $post if $post;
+            Invocation(T_CS('\@@citephrase'),
+                Tokens($open->unlist, ($pre ? ($pre, T_SPACE) : ()))),
+            Invocation(T_CS('\@@citephrase'),
+                Tokens(($post ? ($ns, T_SPACE, $post) : ()), $close->unlist)));
         push @parts, \@toks;
     }
     my @body;
@@ -332,8 +354,7 @@ sub _multicite_bare {
     my @groups = _read_multicite_groups($gullet);
     return () unless @groups;
     unless (_is_authoryear()) {
-        my $all_keys = Tokens(map { @{$$_[2]} } @groups);
-        return _cite_fallback(undef, $all_keys); }
+        return _cite_fallback(undef, _joined_keys(@groups)); }
     my ($ns, $ay) = map { LookupValue($_) } qw(CITE_NOTE_SEPARATOR CITE_AY_SEPARATOR);
     my $author = ($star ? "FullAuthors" : "Authors");
     my @parts;
@@ -431,11 +452,20 @@ DefMacro('\endlossort',    \&biblatex_as_thebibliography, locked => 1);
 DefMacro('\endrefsection', \&biblatex_as_thebibliography, locked => 1);
 
 # ---------------------------------------------------------------------------
-# Structured tags constructor for bibliography entries.
-# CrossRef uses separate role="authors", role="year" etc. tags to build
-# author-year citations with phrase support (prenote/postnote text around xref).
-# Appended after \bibitem in each bibliography entry.
+# Author-year bibitem support, mirroring natbib's \@@lbibitem + \NAT@@wrout:
+# \blx@lbibitem opens the <ltx:bibitem> (no tags, no bibblock — ltx:bibblock
+# is autoOpen, so the following entry text opens one), and \bbl@tags emits
+# the bibitem's single <ltx:tags> with the role="authors"/"year"/... tags
+# that Post::CrossRef uses to build author-year citations with phrase
+# support (prenote/postnote text around the xref).
+# The schema model is bibitem = (tags?, bibblock*): one tags element, first.
 # ---------------------------------------------------------------------------
+DefConstructor('\blx@lbibitem Semiverbatim',
+  "<ltx:bibitem key='#key' xml:id='#id'>",
+  afterDigest => sub {
+    my $key = CleanBibKey($_[1]->getArg(1));
+    $_[1]->setProperties(key => $key, RefStepID('@bibitem')); });
+
 DefConstructor('\bbl@tags{}{}{}{}',
   "<ltx:tags>"
     . "?#1(<ltx:tag role='year'>#1</ltx:tag>)"
@@ -444,6 +474,23 @@ DefConstructor('\bbl@tags{}{}{}{}',
     . "?#4(<ltx:tag role='refnum'>#4</ltx:tag>)"
     . "</ltx:tags>",
   bounded => 1, beforeDigest => sub { Let(T_ALIGN, '\&'); });
+
+# Surnames of an entry's authors, for author-year label construction.
+# Prefer the family parts recorded by \name; fall back to the last
+# space-separated word of each full name (pre-typeset corporate authors etc.).
+sub _entry_surnames {
+  my ($authors_data) = @_;
+  $authors_data ||= {};
+  my @names    = @{ $$authors_data{names}    || [] };
+  my @surnames = @{ $$authors_data{surnames} || [] };
+  my @result;
+  for my $i (0 .. $#names) {
+    my $s = $surnames[$i];
+    $s = (split /\s+/, $names[$i] || '')[-1] unless defined $s && $s ne '';
+    $s = '' unless defined $s;
+    $s =~ s/\\\w+|[}{]//g;
+    push @result, $s if $s ne ''; }
+  return @result; }
 
 DefMacro('\entry{}{}{}', sub {
     AssignValue('biblatex_entry', {
@@ -455,7 +502,10 @@ DefMacro('\endentry', sub {
     my $entry = LookupValue('biblatex_entry') || {};
     # reset entry just in case
     AssignValue('biblatex_entry', undef, 'global');
-    my $label = ToString(Digest(Expand($$entry{'labelalpha'} || $$entry{'label'})));
+    # Careful: Expand(undef) error-recovers as the literal string 'undef';
+    # guard every field lookup before expanding.
+    my $label_src = $$entry{'labelalpha'} || $$entry{'label'};
+    my $label     = $label_src ? ToString(Digest(Expand($label_src))) : '';
     # TODO: what should we do with constructors leftover here? e.g.
     # \field{labelalpha}{AAP\textsuperscript {+}96} from arXiv:1512.08147
     $label =~ s/\\\w+|[}{]//g;
@@ -464,23 +514,21 @@ DefMacro('\endentry', sub {
     my $year_str = $year_tok ? ToString(Digest(Expand($year_tok))) : '';
     # For author-year styles (e.g. nyt), labelalpha/label are absent.
     # Construct a "Surname, Year" label from available author and year data.
-    if (!$label) {
-      my $authors_data = $$entry{authors} || {};
-      my @names = @{ $authors_data->{names} || [] };
-      if (@names && $year_str) {
-        my $surname = (split /\s+/, $names[0])[-1];
-        $surname =~ s/\\\w+|[}{]//g;
+    # Only when the document actually uses an author-year style: numeric
+    # documents must keep their sequential [1],[2],... labels.
+    my $ay_label = 0;
+    if (!$label && _is_authoryear()) {
+      my @surnames = _entry_surnames($$entry{authors});
+      if (@surnames && $year_str) {
         my $author_part;
-        if (@names == 1) {
-          $author_part = $surname;
-        } elsif (@names == 2) {
-          my $surname2 = (split /\s+/, $names[1])[-1];
-          $surname2 =~ s/\\\w+|[}{]//g;
-          $author_part = "${surname} & ${surname2}";
-        } else {
-          $author_part = "${surname} et al.";
-        }
-        $label = "${author_part}, ${year_str}"; } }
+        if (@surnames == 1) {
+          $author_part = $surnames[0]; }
+        elsif (@surnames == 2) {
+          $author_part = "$surnames[0] & $surnames[1]"; }
+        else {
+          $author_part = "$surnames[0] et al."; }
+        $label    = "${author_part}, ${year_str}";
+        $ay_label = 1; } }
     # Fallback to sequential numbering when no author/year data is available.
     if (!$label) {
       my $label_int = 1 + (LookupValue('biblatex_auto_label') || 0);
@@ -505,36 +553,46 @@ DefMacro('\endentry', sub {
     AssignValue('biblatex_entry_count', 1 + (LookupValue('biblatex_entry_count') || 0), 'global');
 
     my $variant = LookupValue('rebuilt_bibtex_variant') || [];
-    push @$variant, (
-      T_CS('\bibitem'), T_OTHER('['), ExplodeText($label), T_OTHER(']'), T_BEGIN, ExplodeText($$entry{key}), T_END);
-    # Inject structured author/year tags so CrossRef can resolve
-    # textual citations (e.g. \textcite) with phrase support.
-    my ($author_part, $refnum_str);
-    if ($label =~ /^(.+),\s*(\d{4}\w*)$/) {
-      $author_part = $1;
-      $refnum_str  = "$author_part ($2)";
-    } else {
-      $author_part = $label;
-      $refnum_str  = $label;
+    if ($ay_label) {
+      # Author-year entry: open the bibitem WITHOUT the plain \bibitem
+      # (which would emit its own <ltx:tags> and open a <ltx:bibblock>),
+      # then emit the single structured <ltx:tags> with the author/year
+      # roles that Post::CrossRef needs to resolve \textcite / \parencite
+      # with phrase support. Mirrors natbib's \@@lbibitem + \NAT@@wrout;
+      # keeps the schema model bibitem = (tags?, bibblock*) valid.
+      my ($author_part, $ay_year, $refnum_str);
+      if ($label =~ /^(.+),\s*(\d{4}\w*)$/) {
+        # $2 carries any disambiguation suffix (2020a, 2020ab, ...);
+        # the year tag must too, or same-author-same-year entries collide.
+        $author_part = $1;
+        $ay_year     = $2;
+        $refnum_str  = "$author_part ($ay_year)"; }
+      else {
+        $author_part = $label;
+        $ay_year     = $year_str;
+        $refnum_str  = $label; }
+      # Compute fullauthors from all names (not truncated like $author_part)
+      my @all_surnames = _entry_surnames($$entry{authors});
+      my $full_author_part;
+      if (@all_surnames == 0) {
+        $full_author_part = $author_part; }
+      elsif (@all_surnames <= 2) {
+        $full_author_part = join(' & ', @all_surnames); }
+      else {
+        $full_author_part = join(', ', @all_surnames[0 .. $#all_surnames - 1]) . ' & ' . $all_surnames[-1]; }
+      push @$variant, (
+        T_CS('\blx@lbibitem'), T_BEGIN, ExplodeText($$entry{key}), T_END,
+        T_CS('\bbl@tags'),
+        T_BEGIN, ExplodeText($ay_year),          T_END,    # year
+        T_BEGIN, ExplodeText($author_part),      T_END,    # authors (short form)
+        T_BEGIN, ExplodeText($full_author_part), T_END,    # fullauthors (all names)
+        T_BEGIN, ExplodeText($refnum_str),       T_END);   # refnum
     }
-    # Compute fullauthors from all names (not truncated like $author_part)
-    my $authors_data = $$entry{authors} || {};
-    my @all_names = @{ $authors_data->{names} || [] };
-    my @all_surnames = map { my $s = (split /\s+/, $_)[-1]; $s =~ s/\\\w+|[}{]//g; $s } @all_names;
-    my $full_author_part;
-    if (@all_surnames == 0) {
-      $full_author_part = $author_part;
-    } elsif (@all_surnames <= 2) {
-      $full_author_part = join(' & ', @all_surnames);
-    } else {
-      $full_author_part = join(', ', @all_surnames[0..$#all_surnames-1]) . ' & ' . $all_surnames[-1];
-    }
-    push @$variant, (
-      T_CS('\bbl@tags'),
-      T_BEGIN, ExplodeText($year_str), T_END,             # year
-      T_BEGIN, ExplodeText($author_part), T_END,           # authors (short form)
-      T_BEGIN, ExplodeText($full_author_part), T_END,      # fullauthors (all names)
-      T_BEGIN, ExplodeText($refnum_str), T_END);           # refnum
+    else {
+      # Numeric / alphabetic / sequential-fallback entry: plain \bibitem,
+      # exactly as before author-year support was added.
+      push @$variant, (
+        T_CS('\bibitem'), T_OTHER('['), ExplodeText($label), T_OTHER(']'), T_BEGIN, ExplodeText($$entry{key}), T_END); }
     my $authors = $$entry{authors};
     # Two cases: either we have a DB-like hash,
     # or they were pre-typeset in "names"
@@ -678,12 +736,20 @@ DefMacro('\name{}{}{}', sub {
       if ($keyvals_flag) {
         my $keyvals = LaTeXML::Core::KeyVals->new(undef, 'BiblatexAuthor', setInternals => 1);
         $keyvals->readFrom($gullet, T_END);
-        my $kv_given  = ToString(Digest(Expand($keyvals->getValue('given')  || $keyvals->getValue('giveni'))));
-        my $kv_prefix = ToString(Digest(Expand($keyvals->getValue('prefix') || $keyvals->getValue('prefixi'))));
-        my $kv_family = ToString(Digest(Expand($keyvals->getValue('family') || $keyvals->getValue('familyi'))));
-        my $kv_suffix = ToString(Digest(Expand($keyvals->getValue('suffix') || $keyvals->getValue('suffixi'))));
+        # Most name parts are optional; Expand(undef) error-recovers as the
+        # literal string 'undef', so only expand values that are present.
+        my $kv_string = sub {
+          for my $k (@_) {
+            if (my $v = $keyvals->getValue($k)) {
+              return ToString(Digest(Expand($v))); } }
+          return ''; };
+        my $kv_given  = $kv_string->('given',  'giveni');
+        my $kv_prefix = $kv_string->('prefix', 'prefixi');
+        my $kv_family = $kv_string->('family', 'familyi');
+        my $kv_suffix = $kv_string->('suffix', 'suffixi');
         $kv_prefix =~ s/\\\w+|[}{]//g;
-        $fullname = join(' ', grep { $_ ne '' } ($kv_given, $kv_prefix, $kv_family, $kv_suffix)); }
+        $fullname = join(' ', grep { $_ ne '' } ($kv_given, $kv_prefix, $kv_family, $kv_suffix));
+        push @{ $authors{'surnames'} }, $kv_family; }
       # if $author_hash is empty, expect pre-laid out arguments
       else {
         my $family   = $gullet->readArg();
@@ -698,7 +764,8 @@ DefMacro('\name{}{}{}', sub {
         $familyi  = ref $familyi ? ToString(Digest(Expand($familyi->unlist))) : '';
         $given    = ref $given   ? ToString(Digest(Expand($given->unlist)))   : '';
         $giveni   = ref $giveni  ? ToString(Digest(Expand($giveni->unlist)))  : '';
-        $fullname = $given . ' ' . $family; }
+        $fullname = $given . ' ' . $family;
+        push @{ $authors{'surnames'} }, $family; }
       # drop any remaining braces and constructor command sequences
       # TODO: is there a better way?
       $fullname =~ s/\\\w+|[}{]//g;
