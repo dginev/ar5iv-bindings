@@ -430,9 +430,24 @@ DefMacro('\endsortlist',   \&biblatex_as_thebibliography, locked => 1);
 DefMacro('\endlossort',    \&biblatex_as_thebibliography, locked => 1);
 DefMacro('\endrefsection', \&biblatex_as_thebibliography, locked => 1);
 
+# ---------------------------------------------------------------------------
+# Structured tags constructor for bibliography entries.
+# CrossRef uses separate role="authors", role="year" etc. tags to build
+# author-year citations with phrase support (prenote/postnote text around xref).
+# Appended after \bibitem in each bibliography entry.
+# ---------------------------------------------------------------------------
+DefConstructor('\bbl@tags{}{}{}{}',
+  "<ltx:tags>"
+    . "?#1(<ltx:tag role='year'>#1</ltx:tag>)"
+    . "?#2(<ltx:tag role='authors'>#2</ltx:tag>)"
+    . "?#3(<ltx:tag role='fullauthors'>#3</ltx:tag>)"
+    . "?#4(<ltx:tag role='refnum'>#4</ltx:tag>)"
+    . "</ltx:tags>",
+  bounded => 1, beforeDigest => sub { Let(T_ALIGN, '\&'); });
+
 DefMacro('\entry{}{}{}', sub {
     AssignValue('biblatex_entry', {
-        key => $_[1], type => $_[2] }, 'global');
+        key => ToString($_[1]), type => ToString($_[2]) }, 'global');
     return; }, locked => 1);
 
 DefMacro('\endentry', sub {
@@ -444,9 +459,29 @@ DefMacro('\endentry', sub {
     # TODO: what should we do with constructors leftover here? e.g.
     # \field{labelalpha}{AAP\textsuperscript {+}96} from arXiv:1512.08147
     $label =~ s/\\\w+|[}{]//g;
-    # let's say we can not yet find the right label,
-    # as the biblatex support here is minimal.
-    # Rather than failing loudly, let's make a simple default one.
+    # Compute year string once for reuse in label generation and structured tags.
+    my $year_tok = $$entry{year};
+    my $year_str = $year_tok ? ToString(Digest(Expand($year_tok))) : '';
+    # For author-year styles (e.g. nyt), labelalpha/label are absent.
+    # Construct a "Surname, Year" label from available author and year data.
+    if (!$label) {
+      my $authors_data = $$entry{authors} || {};
+      my @names = @{ $authors_data->{names} || [] };
+      if (@names && $year_str) {
+        my $surname = (split /\s+/, $names[0])[-1];
+        $surname =~ s/\\\w+|[}{]//g;
+        my $author_part;
+        if (@names == 1) {
+          $author_part = $surname;
+        } elsif (@names == 2) {
+          my $surname2 = (split /\s+/, $names[1])[-1];
+          $surname2 =~ s/\\\w+|[}{]//g;
+          $author_part = "${surname} & ${surname2}";
+        } else {
+          $author_part = "${surname} et al.";
+        }
+        $label = "${author_part}, ${year_str}"; } }
+    # Fallback to sequential numbering when no author/year data is available.
     if (!$label) {
       my $label_int = 1 + (LookupValue('biblatex_auto_label') || 0);
       AssignValue('biblatex_auto_label', $label_int, 'global');
@@ -471,7 +506,35 @@ DefMacro('\endentry', sub {
 
     my $variant = LookupValue('rebuilt_bibtex_variant') || [];
     push @$variant, (
-      T_CS('\bibitem'), T_OTHER('['), T_OTHER($label), T_OTHER(']'), T_BEGIN, $$entry{key}, T_END);
+      T_CS('\bibitem'), T_OTHER('['), ExplodeText($label), T_OTHER(']'), T_BEGIN, ExplodeText($$entry{key}), T_END);
+    # Inject structured author/year tags so CrossRef can resolve
+    # textual citations (e.g. \textcite) with phrase support.
+    my ($author_part, $refnum_str);
+    if ($label =~ /^(.+),\s*(\d{4}\w*)$/) {
+      $author_part = $1;
+      $refnum_str  = "$author_part ($2)";
+    } else {
+      $author_part = $label;
+      $refnum_str  = $label;
+    }
+    # Compute fullauthors from all names (not truncated like $author_part)
+    my $authors_data = $$entry{authors} || {};
+    my @all_names = @{ $authors_data->{names} || [] };
+    my @all_surnames = map { my $s = (split /\s+/, $_)[-1]; $s =~ s/\\\w+|[}{]//g; $s } @all_names;
+    my $full_author_part;
+    if (@all_surnames == 0) {
+      $full_author_part = $author_part;
+    } elsif (@all_surnames <= 2) {
+      $full_author_part = join(' & ', @all_surnames);
+    } else {
+      $full_author_part = join(', ', @all_surnames[0..$#all_surnames-1]) . ' & ' . $all_surnames[-1];
+    }
+    push @$variant, (
+      T_CS('\bbl@tags'),
+      T_BEGIN, ExplodeText($year_str), T_END,             # year
+      T_BEGIN, ExplodeText($author_part), T_END,           # authors (short form)
+      T_BEGIN, ExplodeText($full_author_part), T_END,      # fullauthors (all names)
+      T_BEGIN, ExplodeText($refnum_str), T_END);           # refnum
     my $authors = $$entry{authors};
     # Two cases: either we have a DB-like hash,
     # or they were pre-typeset in "names"
@@ -568,10 +631,18 @@ DefMacro('\endentry', sub {
     return ();
 }, locked => 1);
 
-DefKeyVal('BiblatexAuthor', 'given',   '');
-DefKeyVal('BiblatexAuthor', 'giveni',  '');
-DefKeyVal('BiblatexAuthor', 'family',  '');
-DefKeyVal('BiblatexAuthor', 'familyi', '');
+DefKeyVal('BiblatexAuthor', 'given',     '');
+DefKeyVal('BiblatexAuthor', 'giveni',   '');
+DefKeyVal('BiblatexAuthor', 'givenun',  '');
+DefKeyVal('BiblatexAuthor', 'family',   '');
+DefKeyVal('BiblatexAuthor', 'familyi',  '');
+DefKeyVal('BiblatexAuthor', 'familyun', '');
+DefKeyVal('BiblatexAuthor', 'prefix',   '');
+DefKeyVal('BiblatexAuthor', 'prefixi',  '');
+DefKeyVal('BiblatexAuthor', 'prefixun', '');
+DefKeyVal('BiblatexAuthor', 'suffix',   '');
+DefKeyVal('BiblatexAuthor', 'suffixi',  '');
+DefKeyVal('BiblatexAuthor', 'nameun',   '');
 
 DefMacro('\name{}{}{}', sub {
     my ($gullet, $type, $count, $maybe_content) = @_;
@@ -607,9 +678,12 @@ DefMacro('\name{}{}{}', sub {
       if ($keyvals_flag) {
         my $keyvals = LaTeXML::Core::KeyVals->new(undef, 'BiblatexAuthor', setInternals => 1);
         $keyvals->readFrom($gullet, T_END);
-        $fullname = ToString(Digest(Expand($keyvals->getValue('given') || $keyvals->getValue('giveni'))))
-          . ' '
-          . (ToString(Digest(Expand($keyvals->getValue('family') || $keyvals->getValue('familyi'))))); }
+        my $kv_given  = ToString(Digest(Expand($keyvals->getValue('given')  || $keyvals->getValue('giveni'))));
+        my $kv_prefix = ToString(Digest(Expand($keyvals->getValue('prefix') || $keyvals->getValue('prefixi'))));
+        my $kv_family = ToString(Digest(Expand($keyvals->getValue('family') || $keyvals->getValue('familyi'))));
+        my $kv_suffix = ToString(Digest(Expand($keyvals->getValue('suffix') || $keyvals->getValue('suffixi'))));
+        $kv_prefix =~ s/\\\w+|[}{]//g;
+        $fullname = join(' ', grep { $_ ne '' } ($kv_given, $kv_prefix, $kv_family, $kv_suffix)); }
       # if $author_hash is empty, expect pre-laid out arguments
       else {
         my $family   = $gullet->readArg();
@@ -713,8 +787,11 @@ DefPrimitive('\addbibresource{}', sub {
 Let('\biblatex@saved@bibliography', '\bibliography');
 Let('\bibliography',                '\addbibresource');
 
-DefMacro('\printbibliography', '\let\verb\biblatex@verb\let\endverb\biblatex@endverb'
-    . '\biblatex@printbibliography');
+DefMacro('\printbibliography[]',
+    '\let\verb\biblatex@verb\let\endverb\biblatex@endverb'
+    . '\catcode`\&=12\relax'
+    . '\InputIfFileExists{\jobname.bbl}{}{\biblatex@printbibliography}'
+    . '\catcode`\&=4\relax');
 DefMacro('\biblatex@printbibliography[]', sub {
     my @resources = ();
     while (my $res = PopValue('biblatex_resources')) {
